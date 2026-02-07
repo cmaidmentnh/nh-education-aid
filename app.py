@@ -98,10 +98,11 @@ def index():
             first_good = t
             break
 
+    # Growth % uses adequacy grants (legislature-controlled funding, not SWEPT)
     growth_pct = 0
-    if first_good and latest_good and first_good.total_all_education_aid:
-        growth_pct = ((latest_good.total_all_education_aid - first_good.total_all_education_aid)
-                      / first_good.total_all_education_aid) * 100
+    if first_good and latest_good and first_good.total_adequacy_aid and first_good.total_adequacy_aid > 0:
+        growth_pct = ((latest_good.total_adequacy_aid - first_good.total_adequacy_aid)
+                      / first_good.total_adequacy_aid) * 100
 
     return render_template('index.html',
                            totals=totals,

@@ -19,19 +19,19 @@
         <!-- Hero Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-3xl font-bold text-gop-light">{{ latest.total_all_education_aid|currency }}</div>
+                <div class="text-xl font-bold text-gop-light">{{ latest.total_all_education_aid|currency_full }}</div>
                 <div class="text-sm text-gray-300 mt-1">FY{{ latest.fiscal_year }} Total Aid</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-3xl font-bold text-gop-light">${{ "{:,.0f}".format(latest.base_cost_per_pupil or 0) }}</div>
+                <div class="text-xl font-bold text-gop-light">${{ "{:,.0f}".format(latest.base_cost_per_pupil or 0) }}</div>
                 <div class="text-sm text-gray-300 mt-1">Base Per-Pupil Cost</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-3xl font-bold text-gop-light">{{ "{:,.0f}".format(latest.total_adm or 0) }}</div>
+                <div class="text-xl font-bold text-gop-light">{{ "{:,.0f}".format(latest.total_adm or 0) }}</div>
                 <div class="text-sm text-gray-300 mt-1">Students (ADM)</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-3xl font-bold text-gop-light">${{ "{:,.0f}".format(latest.aid_per_pupil or 0) }}</div>
+                <div class="text-xl font-bold text-gop-light">${{ "{:,.0f}".format(latest.aid_per_pupil or 0) }}</div>
                 <div class="text-sm text-gray-300 mt-1">Aid Per Pupil</div>
             </div>
         </div>
