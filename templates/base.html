@@ -91,11 +91,13 @@
                     <a href="/compare" class="hover:text-gray-300 transition">Compare Towns</a>
                     <a href="/map" class="hover:text-gray-300 transition">Map</a>
                     <a href="/data" class="hover:text-gray-300 transition">Data</a>
-                    <!-- Inflation Toggle -->
+                    <!-- Inflation Toggle (disabled pending review) -->
+                    <!--
                     <div id="inflation-toggle" class="flex items-center bg-navy-700 rounded-lg text-xs overflow-hidden cursor-pointer select-none">
                         <span id="toggle-nominal" class="px-3 py-1.5 font-semibold bg-growth text-white transition">Nominal $</span>
                         <span id="toggle-real" class="px-3 py-1.5 font-semibold text-gray-400 transition">Real $ (FY27)</span>
                     </div>
+                    -->
                     <!-- Search -->
                     <div class="relative">
                         <input type="text" id="nav-search" placeholder="Search towns..."
@@ -118,10 +120,13 @@
             <a href="/compare" class="block py-2 hover:text-gray-300">Compare Towns</a>
             <a href="/map" class="block py-2 hover:text-gray-300">Map</a>
             <a href="/data" class="block py-2 hover:text-gray-300">Data</a>
+            <!-- Inflation Toggle Mobile (disabled pending review) -->
+            <!--
             <div id="inflation-toggle-mobile" class="flex items-center bg-navy-600 rounded-lg text-xs overflow-hidden cursor-pointer select-none mt-2 w-fit">
                 <span class="toggle-nominal-m px-3 py-1.5 font-semibold bg-growth text-white transition">Nominal $</span>
                 <span class="toggle-real-m px-3 py-1.5 font-semibold text-gray-400 transition">Real $ (FY27)</span>
             </div>
+            -->
             <input type="text" id="mobile-search" placeholder="Search towns..."
                    class="mt-2 bg-navy-600 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-growth">
         </div>
@@ -159,7 +164,7 @@
     <script>
     const CPI = {{ cpi_data|tojson }};
     const BASE_CPI = CPI[2027] || 355.0;
-    let useRealDollars = localStorage.getItem('useRealDollars') === 'true';
+    let useRealDollars = false; // disabled pending review
 
     function adjustVal(value, fy) {
         if (!useRealDollars || !value || !CPI[fy]) return value;
