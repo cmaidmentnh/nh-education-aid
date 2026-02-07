@@ -89,19 +89,19 @@ def index():
     # Find the latest year with good total data
     latest_good = None
     for t in reversed(totals):
-        if t.total_adequacy_aid and t.total_adequacy_aid > 0:
+        if t.total_all_education_aid and t.total_all_education_aid > 0:
             latest_good = t
             break
     first_good = None
     for t in totals:
-        if t.total_adequacy_aid and t.total_adequacy_aid > 0:
+        if t.total_all_education_aid and t.total_all_education_aid > 0:
             first_good = t
             break
 
     growth_pct = 0
-    if first_good and latest_good and first_good.total_adequacy_aid:
-        growth_pct = ((latest_good.total_adequacy_aid - first_good.total_adequacy_aid)
-                      / first_good.total_adequacy_aid) * 100
+    if first_good and latest_good and first_good.total_all_education_aid:
+        growth_pct = ((latest_good.total_all_education_aid - first_good.total_all_education_aid)
+                      / first_good.total_all_education_aid) * 100
 
     return render_template('index.html',
                            totals=totals,

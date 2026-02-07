@@ -10,8 +10,8 @@
                 NH Education Funding Has Grown <span class="text-gop-light">{{ "%.0f"|format(growth_pct) }}%</span>
             </h1>
             <p class="text-xl text-gray-300 max-w-3xl mx-auto">
-                From FY{{ first.fiscal_year }} to FY{{ latest.fiscal_year }}, New Hampshire's state education aid has increased
-                from {{ first.total_adequacy_aid|currency_full }} to {{ latest.total_adequacy_aid|currency_full }}.
+                From FY{{ first.fiscal_year }} to FY{{ latest.fiscal_year }}, New Hampshire's total state education aid has increased
+                from {{ first.total_all_education_aid|currency_full }} to {{ latest.total_all_education_aid|currency_full }}.
                 Look up your town below.
             </p>
         </div>
@@ -19,7 +19,7 @@
         <!-- Hero Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-3xl font-bold text-gop-light">{{ latest.total_adequacy_aid|currency_full }}</div>
+                <div class="text-3xl font-bold text-gop-light">{{ latest.total_all_education_aid|currency_full }}</div>
                 <div class="text-sm text-gray-300 mt-1">FY{{ latest.fiscal_year }} Total Aid</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
@@ -71,7 +71,7 @@
 
             <!-- Total Aid Bar Chart -->
             <div class="bg-white rounded-xl shadow-md p-6">
-                <h3 class="text-lg font-semibold text-navy-800 mb-4">Total State Education Aid by Year</h3>
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Total State Education Aid by Year (incl. SWEPT)</h3>
                 <div class="chart-container" style="height: 350px;">
                     <canvas id="totalAidChart"></canvas>
                 </div>
@@ -121,7 +121,7 @@
                 <thead class="bg-navy-800 text-white">
                     <tr>
                         <th class="px-4 py-3 text-left">Fiscal Year</th>
-                        <th class="px-4 py-3 text-right">Total Adequacy Aid</th>
+                        <th class="px-4 py-3 text-right">Total State Education Aid</th>
                         <th class="px-4 py-3 text-right">ADM</th>
                         <th class="px-4 py-3 text-right">Aid Per Pupil</th>
                         <th class="px-4 py-3 text-right">Base Cost/Pupil</th>
@@ -131,7 +131,7 @@
                     {% for t in totals|reverse %}
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-4 py-3 font-medium">FY{{ t.fiscal_year }}</td>
-                        <td class="px-4 py-3 text-right">{{ t.total_adequacy_aid|currency_full }}</td>
+                        <td class="px-4 py-3 text-right">{{ t.total_all_education_aid|currency_full }}</td>
                         <td class="px-4 py-3 text-right">{{ "{:,.0f}".format(t.total_adm) if t.total_adm and t.total_adm > 0 else '-' }}</td>
                         <td class="px-4 py-3 text-right">{{ "${:,.0f}".format(t.aid_per_pupil) if t.aid_per_pupil and t.aid_per_pupil > 0 else '-' }}</td>
                         <td class="px-4 py-3 text-right">${{ "{:,.2f}".format(t.base_cost_per_pupil or 0) }}</td>
@@ -149,6 +149,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const years = {{ years|tojson }};
     const adequacy = {{ adequacy|tojson }};
+    const totalAll = {{ total_all|tojson }};
     const perPupil = {{ per_pupil|tojson }};
     const baseCost = {{ base_cost|tojson }};
     const admData = {{ adm_data|tojson }};
@@ -192,9 +193,9 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: yearLabels,
             datasets: [{
-                label: 'Total Adequacy Aid',
-                data: adequacy,
-                backgroundColor: adequacy.map((_, i) => i >= adequacy.length - 6 ? RED : NAVY),
+                label: 'Total State Education Aid',
+                data: totalAll,
+                backgroundColor: totalAll.map((_, i) => i >= totalAll.length - 6 ? RED : NAVY),
                 borderRadius: 4,
             }]
         },
@@ -204,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ...commonOptions.scales,
                 y: {
                     ticks: {
-                        callback: v => '$' + (v / 1000000).toFixed(0) + 'M',
+                        callback: v => v >= 1000000000 ? '$' + (v / 1000000000).toFixed(1) + 'B' : '$' + (v / 1000000).toFixed(0) + 'M',
                         font: { size: 11 }
                     }
                 }
