@@ -1320,7 +1320,8 @@ def compute_statewide_totals(cursor):
         cursor.execute("SELECT SUM(total_aid) FROM kindergarten_aid WHERE fiscal_year = ?", (fy,))
         total_kinder = (cursor.fetchone()[0] or 0)
 
-        total_all = total_adequacy + total_sped + total_building + total_charter + total_cte + total_kinder
+        # total_all uses total_state (grant + SWEPT) since SWEPT is state-mandated education funding
+        total_all = total_state + total_sped + total_building + total_charter + total_cte + total_kinder
         aid_per_pupil = total_all / total_adm if total_adm > 0 else 0
 
         cursor.execute("""INSERT OR REPLACE INTO statewide_totals

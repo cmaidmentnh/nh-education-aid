@@ -153,11 +153,11 @@ def town_detail(name):
         growth_pct = ((last_grant.total_adequacy_grant - first_grant.total_adequacy_grant)
                       / first_grant.total_adequacy_grant) * 100
 
-    # Per-pupil over time
+    # Per-pupil over time (uses total_state_grant which includes SWEPT)
     per_pupil = []
     for a in adequacy:
-        if a.adm and a.adm > 0 and a.total_adequacy_grant:
-            per_pupil.append(round(a.total_adequacy_grant / a.adm, 2))
+        if a.adm and a.adm > 0 and a.total_state_grant:
+            per_pupil.append(round(a.total_state_grant / a.adm, 2))
         else:
             per_pupil.append(None)
 
