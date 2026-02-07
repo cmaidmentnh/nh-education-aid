@@ -633,56 +633,37 @@ def import_fy12_to_fy21(cursor):
                 sped_aid = parse_money(row[base_col + 6]) if base_col + 6 < len(row) else None
                 ell_aid = parse_money(row[base_col + 7]) if base_col + 7 < len(row) else None
 
-                # Find total cost and SWEPT - look for large values
+                # Find total cost and SWEPT
                 total_cost = None
                 swept = None
                 final_grant = None
 
-                # For FY18-FY21 there are additional columns (home school)
-                if fy >= 2018:
-                    # Cols: ...Grade3 ADM, Grade3 Aid, HomeSchool ADM, HomeSchool Aid, Total Cost, SWEPT
-                    grade3_adm_col = base_col + 8
-                    grade3_aid_col = base_col + 9
-                    home_adm_col = base_col + 10
-                    home_aid_col = base_col + 11
+                # Auto-detect whether home school columns exist (FY17,18,21 have them; FY12-16,19,20 don't)
+                # If base+10 is a dash or small number, home school cols exist and Total Cost is at base+12
+                # If base+10 is a large dollar value (>$50K), it's Total Cost directly (no home school cols)
+                has_home_cols = False
+                test_val = parse_money(row[base_col + 10]) if base_col + 10 < len(row) else None
+                if test_val is None or test_val == 0 or abs(test_val) < 50000:
+                    has_home_cols = True
+
+                if has_home_cols:
+                    # Layout: ...Grade3 ADM, Grade3 Aid, HomeSchool ADM, HomeSchool Aid, Total Cost, SWEPT
                     total_cost_col = base_col + 12
                     swept_col = base_col + 13
-                    prelim_col = base_col + 14
-                    # For FY21: additional F&R%, F&R Additional Aid, Fiscal Capacity columns
-                    if fy == 2021:
-                        # FY21 has: ...HomeSchool ADM, HomeSchool Aid, Total Cost, SWEPT,
-                        # %F&R, F&R Additional Aid, Fiscal Capacity Disparity Aid, Prelim Grant,
-                        # FY12 Stab, Stab@100%, Adequacy Grant, Min First Est, 95% Hold Harmless
-                        total_cost = parse_money(row[total_cost_col]) if total_cost_col < len(row) else None
-                        swept = parse_money(row[swept_col]) if swept_col < len(row) else None
-                        # Final grant - look for the adequacy grant column
-                        for gc in range(len(row) - 1, base_col + 14, -1):
-                            v = parse_money(row[gc])
-                            if v and v > 1000:
-                                final_grant = v
-                                break
-                    else:
-                        total_cost = parse_money(row[total_cost_col]) if total_cost_col < len(row) else None
-                        swept = parse_money(row[swept_col]) if swept_col < len(row) else None
-                        # Final grant is typically the last non-empty large value
-                        for gc in range(len(row) - 1, swept_col, -1):
-                            v = parse_money(row[gc])
-                            if v and v > 1000:
-                                final_grant = v
-                                break
                 else:
-                    # FY12-FY17: ...Grade3 ADM, Grade3 Aid, Total Cost, SWEPT, Prelim, ..., Final
-                    grade3_aid_col = base_col + 9
+                    # Layout: ...Grade3 ADM, Grade3 Aid, Total Cost, SWEPT
                     total_cost_col = base_col + 10
                     swept_col = base_col + 11
-                    total_cost = parse_money(row[total_cost_col]) if total_cost_col < len(row) else None
-                    swept = parse_money(row[swept_col]) if swept_col < len(row) else None
-                    # Final grant - last significant value
-                    for gc in range(len(row) - 1, swept_col, -1):
-                        v = parse_money(row[gc])
-                        if v and v > 1000:
-                            final_grant = v
-                            break
+
+                total_cost = parse_money(row[total_cost_col]) if total_cost_col < len(row) else None
+                swept = parse_money(row[swept_col]) if swept_col < len(row) else None
+
+                # Final grant - last significant value after SWEPT
+                for gc in range(len(row) - 1, swept_col, -1):
+                    v = parse_money(row[gc])
+                    if v and v > 1000:
+                        final_grant = v
+                        break
 
                 grade3_aid = parse_money(row[base_col + 9]) if base_col + 9 < len(row) else None
 
