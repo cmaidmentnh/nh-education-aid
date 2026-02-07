@@ -53,14 +53,6 @@
         <h2 class="text-2xl font-bold text-navy-800 mb-8">Statewide Education Funding Over Time</h2>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Total Aid Bar Chart -->
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h3 class="text-lg font-semibold text-navy-800 mb-4">Total State Education Aid by Year</h3>
-                <div class="chart-container" style="height: 350px;">
-                    <canvas id="totalAidChart"></canvas>
-                </div>
-            </div>
-
             <!-- Aid Per Pupil Line Chart -->
             <div class="bg-white rounded-xl shadow-md p-6">
                 <h3 class="text-lg font-semibold text-navy-800 mb-4">Aid Per Pupil</h3>
@@ -69,19 +61,27 @@
                 </div>
             </div>
 
-            <!-- Base Cost Per Pupil vs CPI -->
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h3 class="text-lg font-semibold text-navy-800 mb-4">Base Per-Pupil Cost Over Time</h3>
-                <div class="chart-container" style="height: 350px;">
-                    <canvas id="baseCostChart"></canvas>
-                </div>
-            </div>
-
             <!-- Enrollment Trend -->
             <div class="bg-white rounded-xl shadow-md p-6">
                 <h3 class="text-lg font-semibold text-navy-800 mb-4">Enrollment (ADM) Trend</h3>
                 <div class="chart-container" style="height: 350px;">
                     <canvas id="enrollmentChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Total Aid Bar Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Total State Education Aid by Year</h3>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="totalAidChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Base Cost Per Pupil vs CPI -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Base Per-Pupil Cost Over Time</h3>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="baseCostChart"></canvas>
                 </div>
             </div>
         </div>
