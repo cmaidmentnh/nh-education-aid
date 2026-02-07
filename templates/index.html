@@ -160,9 +160,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const NAVY = '#1B2A4A';
     const GREEN = '#22C55E';
     const LIGHT_GREEN = '#4ADE80';
-    const DARK_GREEN = '#16A34A';
-    const BLUE = '#4164af';
-    const LIGHT_BLUE = '#8da2cf';
+    const DARK_GREEN = '#166534';
+    const SLATE = '#64748B';
 
     // Common chart options
     const commonOptions = {
@@ -196,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 label: 'Adequacy Aid Grants',
                 data: adequacy,
-                backgroundColor: adequacy.map((_, i) => i >= adequacy.length - 6 ? GREEN : NAVY),
+                backgroundColor: GREEN,
                 borderRadius: 4,
             }]
         },
@@ -286,12 +285,12 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 label: 'Average Daily Membership',
                 data: admData,
-                borderColor: BLUE,
-                backgroundColor: 'rgba(65, 100, 175, 0.1)',
+                borderColor: SLATE,
+                backgroundColor: 'rgba(100, 116, 139, 0.1)',
                 fill: true,
                 tension: 0.3,
                 pointRadius: 4,
-                pointBackgroundColor: BLUE,
+                pointBackgroundColor: SLATE,
                 spanGaps: true,
             }]
         },

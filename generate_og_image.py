@@ -39,6 +39,8 @@ for y in range(HEIGHT):
 
 # Top green accent bar
 draw.rectangle([(0, 0), (WIDTH, 5)], fill=(34, 197, 94))
+# Also add thin gold hover accent
+draw.rectangle([(0, 5), (WIDTH, 7)], fill=(30, 45, 78))
 
 # Subtle diagonal accent line (decorative)
 for i in range(3):

@@ -15,7 +15,7 @@
     }
     .info-panel h4 { margin: 0 0 4px; font-size: 15px; color: #1B2A4A; }
     .info-panel .stat { font-size: 13px; color: #4b5563; }
-    .info-panel .stat strong { color: #16A34A; }
+    .info-panel .stat strong { color: #15803d; }
     .legend {
         padding: 8px 12px;
         background: rgba(255,255,255,0.95);
@@ -104,18 +104,18 @@ document.addEventListener('DOMContentLoaded', function() {
         "Thompson & Meserve": "Thompson And Meserves Purchase",
     };
 
-    // Green color scale (light to dark green)
+    // Green color scale - cream/white to deep green for max contrast
     const colorScale = [
-        '#f0fdf4',  // very light green
-        '#bbf7d0',  // light green
-        '#86efac',  // medium-light
-        '#4ade80',  // medium
-        '#22c55e',  // green
-        '#16a34a',  // dark green
-        '#15803d',  // darker green
-        '#166534',  // very dark green
+        '#fefce8',  // warm cream (lowest)
+        '#d9f99d',  // lime-200
+        '#a3e635',  // lime-400
+        '#65a30d',  // lime-700
+        '#22c55e',  // green-500
+        '#16a34a',  // green-600
+        '#15803d',  // green-700
+        '#14532d',  // green-900 (highest)
     ];
-    const NO_DATA_COLOR = '#e5e7eb';
+    const NO_DATA_COLOR = '#f1f5f9';
 
     function getColor(value, min, max) {
         if (value === null || value === undefined) return NO_DATA_COLOR;
@@ -201,8 +201,8 @@ document.addEventListener('DOMContentLoaded', function() {
             fillColor: getColor(value, min, max),
             weight: 1.5,
             opacity: 1,
-            color: '#ffffff',
-            fillOpacity: 0.8,
+            color: '#1B2A4A',
+            fillOpacity: 0.85,
         };
     }
 
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
         layer.on({
             mouseover: function(e) {
                 const layer = e.target;
-                layer.setStyle({ weight: 3, color: '#1B2A4A', fillOpacity: 0.9 });
+                layer.setStyle({ weight: 3, color: '#fbbf24', fillOpacity: 0.9 });
                 layer.bringToFront();
                 info.update(feature.properties.name, townData[feature.properties.name]);
             },
