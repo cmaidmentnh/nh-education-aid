@@ -145,7 +145,7 @@ def normalize_name(name):
         'kearsarge', 'lincoln-woodstock', 'mascenic',
         'mascoma valley', 'mascoma valley reg.', 'merrimack valley',
         'monadnock', 'monadnock regional1', 'newfound', 'newfound area',
-        'oyster river', 'pemi-baker', 'penacook', 'prospect mountain',
+        'oyster river', 'pemi-baker', 'prospect mountain',
         'rivendell', 'rivendell instersate', 'rivendell interstate',
         'rivendell/orford', 'sanborn', 'shaker', 'souhegan',
         'timberlane', 'white mountains', 'white mountains reg.',
@@ -194,7 +194,7 @@ def is_municipality_row(row, name_col=0):
         'replaces', 'october', 'november', 'december', 'january', 'february',
         'march', 'april', 'may', 'june', 'july', 'august', 'september',
         'see footnote', 'k <=', 'per thousand', '#ref!', 'from evals',
-        'from eoy', 'true', 'false', 'grant', 'calculation', 'formula',
+        'from eoy', 'true', 'false', 'calculation', 'formula',
         'rsa', 'statewide', 'enhanced', 'targeted', 'transition',
         'equitable', 'education', 'cost of', 'information', 'commissioner',
         'estimated', 'municipal', 'loc #', 'loc#', 'district',
@@ -202,6 +202,9 @@ def is_municipality_row(row, name_col=0):
     for pattern in skip_patterns:
         if name_lower.startswith(pattern):
             return False
+    # Exact match for 'grant' (not startswith, to avoid catching 'Grantham')
+    if name_lower == 'grant':
+        return False
     # Must start with a letter (municipality name)
     if not re.match(r'^[A-Za-z]', name):
         return False
@@ -628,23 +631,28 @@ def import_fy12_to_fy21(cursor):
                 base_aid = parse_money(row[base_col + 1]) if base_col + 1 < len(row) else None
                 fr_adm = parse_money(row[base_col + 2]) if base_col + 2 < len(row) else None
                 fr_aid = parse_money(row[base_col + 3]) if base_col + 3 < len(row) else None
-                sped_adm = parse_money(row[base_col + 4]) if base_col + 4 < len(row) else None
-                ell_adm = parse_money(row[base_col + 5]) if base_col + 5 < len(row) else None
-                sped_aid = parse_money(row[base_col + 6]) if base_col + 6 < len(row) else None
-                ell_aid = parse_money(row[base_col + 7]) if base_col + 7 < len(row) else None
+
+                # FY19-21 changed column order: SPED_ADM, SPED_Aid, ELL_ADM, ELL_Aid
+                # FY12-18 had: SPED_ADM, ELL_ADM, SPED_Aid, ELL_Aid
+                if fy >= 2019:
+                    sped_adm = parse_money(row[base_col + 4]) if base_col + 4 < len(row) else None
+                    sped_aid = parse_money(row[base_col + 5]) if base_col + 5 < len(row) else None
+                    ell_adm = parse_money(row[base_col + 6]) if base_col + 6 < len(row) else None
+                    ell_aid = parse_money(row[base_col + 7]) if base_col + 7 < len(row) else None
+                else:
+                    sped_adm = parse_money(row[base_col + 4]) if base_col + 4 < len(row) else None
+                    ell_adm = parse_money(row[base_col + 5]) if base_col + 5 < len(row) else None
+                    sped_aid = parse_money(row[base_col + 6]) if base_col + 6 < len(row) else None
+                    ell_aid = parse_money(row[base_col + 7]) if base_col + 7 < len(row) else None
 
                 # Find total cost and SWEPT
                 total_cost = None
                 swept = None
                 final_grant = None
 
-                # Auto-detect whether home school columns exist (FY17,18,21 have them; FY12-16,19,20 don't)
-                # If base+10 is a dash or small number, home school cols exist and Total Cost is at base+12
-                # If base+10 is a large dollar value (>$50K), it's Total Cost directly (no home school cols)
-                has_home_cols = False
-                test_val = parse_money(row[base_col + 10]) if base_col + 10 < len(row) else None
-                if test_val is None or test_val == 0 or abs(test_val) < 50000:
-                    has_home_cols = True
+                # FY17, FY18, FY21 have Home School ADM + Home School Aid columns
+                # FY12-16, FY19, FY20 do not
+                has_home_cols = fy in (2017, 2018, 2021)
 
                 if has_home_cols:
                     # Layout: ...Grade3 ADM, Grade3 Aid, HomeSchool ADM, HomeSchool Aid, Total Cost, SWEPT
@@ -667,7 +675,15 @@ def import_fy12_to_fy21(cursor):
 
                 grade3_aid = parse_money(row[base_col + 9]) if base_col + 9 < len(row) else None
 
-                total_state = ((final_grant or 0) + (swept or 0)) if final_grant else None
+                # Wealthy towns may have $0 adequacy grant but still have SWEPT
+                # total_state should always include SWEPT even if grant is $0/None
+                if final_grant:
+                    total_state = (final_grant or 0) + (swept or 0)
+                elif swept and swept > 0:
+                    total_state = swept
+                    final_grant = 0  # Explicitly set grant to 0, not None
+                else:
+                    total_state = None
 
                 upsert_adequacy(cursor, muni_id, fy,
                                 adm=adm,
@@ -804,7 +820,7 @@ def import_fy22_to_fy26(cursor):
 
             # Get town name from the known column
             candidate = str(row[nc]).strip() if nc < len(row) and row[nc] else ''
-            if not candidate or not re.match(r'^[A-Z][a-z]', candidate) or len(candidate) <= 2:
+            if not candidate or not re.match(r'^[A-Za-z]', candidate) or len(candidate) <= 2:
                 continue
             if candidate.lower() in skip_words:
                 continue
@@ -881,7 +897,7 @@ def import_fy27(cursor):
         if len(row) < 15:
             continue
         candidate = str(row[cols['name']]).strip() if cols['name'] < len(row) and row[cols['name']] else ''
-        if not candidate or not re.match(r'^[A-Z][a-z]', candidate) or len(candidate) <= 2:
+        if not candidate or not re.match(r'^[A-Za-z]', candidate) or len(candidate) <= 2:
             continue
         if candidate.lower() in skip_words:
             continue

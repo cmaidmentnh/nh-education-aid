@@ -8,8 +8,13 @@
 
     <!-- Open Graph -->
     <meta property="og:title" content="{% block og_title %}NH Education Funding Facts{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}NH state education funding has grown 55%+ since 2004. Look up your town's funding history.{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}NH state education funding has grown 54%+ since 2004. Look up your town's funding history.{% endblock %}">
     <meta property="og:type" content="website">
+    <meta property="og:image" content="{% block og_image %}https://educationaid.nhhouse.gop/static/img/og-default.png{% endblock %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{% block twitter_image %}https://educationaid.nhhouse.gop/static/img/og-default.png{% endblock %}">
 
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
