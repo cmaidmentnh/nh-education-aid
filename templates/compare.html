@@ -92,12 +92,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const townsData = {{ towns_data|tojson }};
     const colors = ['#22C55E', '#1e293b', '#64748B', '#94A3B8'];
 
-    // Collect all unique years
     const allYears = [...new Set(townsData.flatMap(t => t.years))].sort();
     const yearLabels = allYears.map(y => 'FY' + y);
 
-    // Grant comparison
-    new Chart(document.getElementById('compareGrantChart'), {
+    const compareGrantChart = new Chart(document.getElementById('compareGrantChart'), {
         type: 'line',
         data: {
             labels: yearLabels,
@@ -109,28 +107,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 }),
                 borderColor: colors[i],
                 backgroundColor: 'transparent',
-                tension: 0.3,
-                pointRadius: 3,
-                spanGaps: true,
+                tension: 0.3, pointRadius: 3, spanGaps: true,
             }))
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: true, position: 'top' } },
             scales: {
                 x: { ticks: { maxRotation: 45, font: { size: 10 } } },
                 y: { ticks: { callback: v => {
-                    if (v >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
-                    if (v >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
-                    return '$' + v;
+                    if (v >= 1e6) return '$'+(v/1e6).toFixed(1)+'M';
+                    if (v >= 1e3) return '$'+(v/1e3).toFixed(0)+'K';
+                    return '$'+v;
                 }}}
             }
         }
     });
 
-    // Per pupil comparison
-    new Chart(document.getElementById('comparePerPupilChart'), {
+    const comparePerPupilChart = new Chart(document.getElementById('comparePerPupilChart'), {
         type: 'line',
         data: {
             labels: yearLabels,
@@ -142,21 +136,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 }),
                 borderColor: colors[i],
                 backgroundColor: 'transparent',
-                tension: 0.3,
-                pointRadius: 3,
-                spanGaps: true,
+                tension: 0.3, pointRadius: 3, spanGaps: true,
             }))
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: true, position: 'top' } },
             scales: {
                 x: { ticks: { maxRotation: 45, font: { size: 10 } } },
-                y: { beginAtZero: false, ticks: { callback: v => '$' + v.toLocaleString() } }
+                y: { beginAtZero: false, ticks: { callback: v => '$'+v.toLocaleString() } }
             }
         }
     });
+
+    function updateForInflation() {
+        townsData.forEach((t, i) => {
+            compareGrantChart.data.datasets[i].data = allYears.map(y => {
+                const idx = t.years.indexOf(y);
+                return idx >= 0 ? adjustVal(t.grants[idx], y) : null;
+            });
+            comparePerPupilChart.data.datasets[i].data = allYears.map(y => {
+                const idx = t.years.indexOf(y);
+                return idx >= 0 ? adjustVal(t.per_pupil[idx], y) : null;
+            });
+        });
+        compareGrantChart.update();
+        comparePerPupilChart.update();
+    }
+
+    document.addEventListener('inflationToggle', updateForInflation);
+    if (useRealDollars) updateForInflation();
     {% endif %}
 });
 </script>

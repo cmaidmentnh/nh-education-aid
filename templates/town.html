@@ -18,19 +18,19 @@
             <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
                 {% if per_pupil_growth_pct and per_pupil_growth_pct > 0 %}
                 <div class="stat-card rounded-lg px-5 py-3 text-center">
-                    <div class="text-2xl font-bold text-growth-light">+{{ "%.0f"|format(per_pupil_growth_pct) }}%</div>
+                    <div class="text-2xl font-bold text-growth-light" id="town-pp-growth">+{{ "%.0f"|format(per_pupil_growth_pct) }}%</div>
                     <div class="text-xs text-gray-300">Per-Pupil Aid Growth</div>
                 </div>
                 {% endif %}
                 {% if growth_pct and growth_pct > 0 %}
                 <div class="stat-card rounded-lg px-5 py-3 text-center">
-                    <div class="text-2xl font-bold text-growth-light">+{{ "%.0f"|format(growth_pct) }}%</div>
+                    <div class="text-2xl font-bold text-growth-light" id="town-total-growth">+{{ "%.0f"|format(growth_pct) }}%</div>
                     <div class="text-xs text-gray-300">Total Funding Growth</div>
                 </div>
                 {% endif %}
                 {% if last_grant %}
                 <div class="stat-card rounded-lg px-5 py-3 text-center">
-                    <div class="text-2xl font-bold text-growth-light">{{ last_grant.total_adequacy_grant|currency }}</div>
+                    <div class="text-2xl font-bold text-growth-light" id="town-fy-aid">{{ last_grant.total_adequacy_grant|currency }}</div>
                     <div class="text-xs text-gray-300">FY{{ last_grant.fiscal_year }} Aid</div>
                 </div>
                 {% endif %}
@@ -109,7 +109,7 @@
                         <th class="px-3 py-3 text-right font-bold">Total State Grant</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="adequacy-table-body">
                     {% for a in adequacy|reverse %}
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-3 py-2 font-medium">{{ a.fiscal_year }}</td>
@@ -144,7 +144,7 @@
                         <th class="px-4 py-3 text-right">State Aid</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="sped-table-body">
                     {% for s in sped|reverse %}
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-4 py-2 font-medium">FY{{ s.fiscal_year }}</td>
@@ -178,6 +178,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const sweptData = {{ swept_data|tojson }};
     const perPupil = {{ per_pupil|tojson }};
 
+    // Row data for table rebuild
+    const adequacyRows = [
+        {% for a in adequacy %}
+        { fy:{{ a.fiscal_year }}, adm:{{ a.adm|tojson }}, base:{{ a.base_adequacy_aid|tojson }}, fr:{{ a.fr_aid|tojson }}, sped:{{ a.sped_differentiated_aid|tojson }}, ell:{{ a.ell_aid|tojson }}, totalCost:{{ a.total_cost_adequate_ed|tojson }}, swept:{{ a.swept|tojson }}, grant:{{ a.total_adequacy_grant|tojson }}, stateGrant:{{ a.total_state_grant|tojson }} },
+        {% endfor %}
+    ];
+    {% if sped %}
+    const spedRows = [
+        {% for s in sped %}
+        { fy:{{ s.fiscal_year }}, entitlement:{{ s.entitlement|tojson }} },
+        {% endfor %}
+    ];
+    {% endif %}
+
+    const rawLastGrantAid = {{ (last_grant.total_adequacy_grant or 0)|tojson }};
+    const lastGrantFY = {{ (last_grant.fiscal_year or 0)|tojson }};
+
     const yearLabels = years.map(y => 'FY' + y);
     const NAVY = '#1e293b';
     const GREEN = '#22C55E';
@@ -196,14 +213,13 @@ document.addEventListener('DOMContentLoaded', function() {
         return '$' + v;
     }
 
-    // Grant history
-    new Chart(document.getElementById('grantChart'), {
+    const grantChart = new Chart(document.getElementById('grantChart'), {
         type: 'bar',
         data: {
             labels: yearLabels,
             datasets: [{
                 label: 'Adequacy Grant',
-                data: grants,
+                data: grants.slice(),
                 backgroundColor: GREEN,
                 borderRadius: 3,
             }]
@@ -211,22 +227,13 @@ document.addEventListener('DOMContentLoaded', function() {
         options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ticks: { callback: currencyTick } } } }
     });
 
-    // Breakdown (stacked: grant + swept)
-    new Chart(document.getElementById('breakdownChart'), {
+    const breakdownChart = new Chart(document.getElementById('breakdownChart'), {
         type: 'bar',
         data: {
             labels: yearLabels,
             datasets: [
-                {
-                    label: 'Adequacy Grant',
-                    data: grants,
-                    backgroundColor: GREEN,
-                },
-                {
-                    label: 'SWEPT',
-                    data: sweptData,
-                    backgroundColor: SLATE,
-                }
+                { label: 'Adequacy Grant', data: grants.slice(), backgroundColor: GREEN },
+                { label: 'SWEPT', data: sweptData.slice(), backgroundColor: SLATE }
             ]
         },
         options: {
@@ -240,26 +247,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Per Pupil
-    new Chart(document.getElementById('perPupilChart'), {
+    const perPupilChart = new Chart(document.getElementById('perPupilChart'), {
         type: 'line',
         data: {
             labels: yearLabels,
             datasets: [{
                 label: 'Per Pupil',
-                data: perPupil,
+                data: perPupil.slice(),
                 borderColor: GREEN,
                 backgroundColor: 'rgba(34,197,94,0.1)',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 3,
-                spanGaps: true,
+                fill: true, tension: 0.3, pointRadius: 3, spanGaps: true,
             }]
         },
         options: { ...commonOpts, scales: { ...commonOpts.scales, y: { beginAtZero: false, ticks: { callback: v => '$' + v.toLocaleString() } } } }
     });
 
-    // Enrollment
     new Chart(document.getElementById('admChart'), {
         type: 'line',
         data: {
@@ -269,14 +271,83 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: admData,
                 borderColor: NAVY,
                 backgroundColor: 'rgba(27,42,74,0.1)',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 3,
-                spanGaps: true,
+                fill: true, tension: 0.3, pointRadius: 3, spanGaps: true,
             }]
         },
         options: { ...commonOpts, scales: { ...commonOpts.scales, y: { beginAtZero: false, ticks: { callback: v => v.toLocaleString() } } } }
     });
+
+    // Inflation toggle handler
+    function updateForInflation() {
+        // Charts (not enrollment)
+        grantChart.data.datasets[0].data = adjustArray(grants, years);
+        grantChart.update();
+        breakdownChart.data.datasets[0].data = adjustArray(grants, years);
+        breakdownChart.data.datasets[1].data = adjustArray(sweptData, years);
+        breakdownChart.update();
+        perPupilChart.data.datasets[0].data = adjustArray(perPupil, years);
+        perPupilChart.update();
+
+        // Stat cards
+        const adjGrants = adjustArray(grants, years);
+        const firstG = adjGrants.find(v => v && v > 0);
+        const lastG = [...adjGrants].reverse().find(v => v && v > 0);
+        const gp = (firstG && lastG) ? Math.round(((lastG - firstG) / firstG) * 100) : 0;
+        const el1 = document.getElementById('town-total-growth');
+        if (el1) el1.textContent = '+' + gp + '%';
+
+        const adjPP = adjustArray(perPupil, years);
+        const firstPP = adjPP.find(v => v && v > 0);
+        const lastPP = [...adjPP].reverse().find(v => v && v > 0);
+        const ppg = (firstPP && lastPP) ? Math.round(((lastPP - firstPP) / firstPP) * 100) : 0;
+        const el2 = document.getElementById('town-pp-growth');
+        if (el2) el2.textContent = '+' + ppg + '%';
+
+        const el3 = document.getElementById('town-fy-aid');
+        if (el3) el3.textContent = fmtCurrencyShort(adjustVal(rawLastGrantAid, lastGrantFY));
+
+        // Adequacy table
+        const tbody = document.getElementById('adequacy-table-body');
+        if (tbody) {
+            let html = '';
+            for (let i = adequacyRows.length - 1; i >= 0; i--) {
+                const r = adequacyRows[i];
+                const fy = r.fy;
+                html += '<tr class="border-b border-gray-100 hover:bg-gray-50">' +
+                    '<td class="px-3 py-2 font-medium">' + fy + '</td>' +
+                    '<td class="px-3 py-2 text-right">' + (r.adm ? Number(r.adm).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1}) : '-') + '</td>' +
+                    '<td class="px-3 py-2 text-right">' + (r.base ? fmtCurrency(adjustVal(r.base, fy)) : '-') + '</td>' +
+                    '<td class="px-3 py-2 text-right">' + (r.fr ? fmtCurrency(adjustVal(r.fr, fy)) : '-') + '</td>' +
+                    '<td class="px-3 py-2 text-right">' + (r.sped ? fmtCurrency(adjustVal(r.sped, fy)) : '-') + '</td>' +
+                    '<td class="px-3 py-2 text-right">' + (r.ell ? fmtCurrency(adjustVal(r.ell, fy)) : '-') + '</td>' +
+                    '<td class="px-3 py-2 text-right">' + (r.totalCost ? fmtCurrency(adjustVal(r.totalCost, fy)) : '-') + '</td>' +
+                    '<td class="px-3 py-2 text-right">' + (r.swept ? fmtCurrency(adjustVal(r.swept, fy)) : '-') + '</td>' +
+                    '<td class="px-3 py-2 text-right font-semibold text-growth-dark">' + (r.grant ? fmtCurrency(adjustVal(r.grant, fy)) : '-') + '</td>' +
+                    '<td class="px-3 py-2 text-right font-semibold">' + (r.stateGrant ? fmtCurrency(adjustVal(r.stateGrant, fy)) : '-') + '</td>' +
+                    '</tr>';
+            }
+            tbody.innerHTML = html;
+        }
+
+        // SPED table
+        {% if sped %}
+        const spedTbody = document.getElementById('sped-table-body');
+        if (spedTbody) {
+            let html = '';
+            for (let i = spedRows.length - 1; i >= 0; i--) {
+                const r = spedRows[i];
+                html += '<tr class="border-b border-gray-100 hover:bg-gray-50">' +
+                    '<td class="px-4 py-2 font-medium">FY' + r.fy + '</td>' +
+                    '<td class="px-4 py-2 text-right font-semibold">' + (r.entitlement ? fmtCurrency(adjustVal(r.entitlement, r.fy)) : '-') + '</td>' +
+                    '</tr>';
+            }
+            spedTbody.innerHTML = html;
+        }
+        {% endif %}
+    }
+
+    document.addEventListener('inflationToggle', updateForInflation);
+    if (useRealDollars) updateForInflation();
 });
 </script>
 {% endblock %}

@@ -7,11 +7,11 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
             <h1 class="text-4xl md:text-5xl font-extrabold mb-4">
-                NH Education Funding Has Grown <span class="text-growth-light">{{ "%.0f"|format(growth_pct) }}%</span>
+                NH Education Funding Has Grown <span class="text-growth-light" id="hero-growth-pct">{{ "%.0f"|format(growth_pct) }}%</span>
             </h1>
             <p class="text-xl text-gray-300 max-w-3xl mx-auto">
                 From FY{{ first.fiscal_year }} to FY{{ latest.fiscal_year }}, New Hampshire's total state education aid has increased
-                from {{ first.total_all_education_aid|currency_full }} to {{ latest.total_all_education_aid|currency_full }}.
+                from <span id="hero-first-aid">{{ first.total_all_education_aid|currency_full }}</span> to <span id="hero-latest-aid">{{ latest.total_all_education_aid|currency_full }}</span>.
                 Look up your town below.
             </p>
         </div>
@@ -19,11 +19,11 @@
         <!-- Hero Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-xl font-bold text-growth-light">{{ latest.total_all_education_aid|currency_full }}</div>
+                <div class="text-xl font-bold text-growth-light" id="stat-total-aid">{{ latest.total_all_education_aid|currency_full }}</div>
                 <div class="text-sm text-gray-300 mt-1">FY{{ latest.fiscal_year }} Total Aid</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-xl font-bold text-growth-light">${{ "{:,.0f}".format(latest.base_cost_per_pupil or 0) }}</div>
+                <div class="text-xl font-bold text-growth-light" id="stat-base-cost">${{ "{:,.0f}".format(latest.base_cost_per_pupil or 0) }}</div>
                 <div class="text-sm text-gray-300 mt-1">Base Per-Pupil Cost</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
@@ -31,7 +31,7 @@
                 <div class="text-sm text-gray-300 mt-1">Students (ADM)</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-xl font-bold text-growth-light">${{ "{:,.0f}".format(latest.aid_per_pupil or 0) }}</div>
+                <div class="text-xl font-bold text-growth-light" id="stat-aid-per-pupil">${{ "{:,.0f}".format(latest.aid_per_pupil or 0) }}</div>
                 <div class="text-sm text-gray-300 mt-1">Aid Per Pupil</div>
             </div>
         </div>
@@ -93,12 +93,12 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div>
-                <div class="text-2xl font-bold text-growth-light">+{{ "%.0f"|format(growth_pct) }}%</div>
+                <div class="text-2xl font-bold text-growth-light" id="facts-growth-pct">+{{ "%.0f"|format(growth_pct) }}%</div>
                 <div class="text-gray-300">Growth in State Education Aid Since FY{{ first.fiscal_year }}</div>
             </div>
             <div>
                 {% if first and latest and first.base_cost_per_pupil and latest.base_cost_per_pupil %}
-                <div class="text-2xl font-bold text-growth-light">
+                <div class="text-2xl font-bold text-growth-light" id="facts-base-cost">
                     ${{ "{:,.0f}".format(first.base_cost_per_pupil) }} &rarr; ${{ "{:,.0f}".format(latest.base_cost_per_pupil) }}
                 </div>
                 <div class="text-gray-300">Base Per-Pupil Cost Growth</div>
@@ -127,7 +127,7 @@
                         <th class="px-4 py-3 text-right">Base Cost/Pupil</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="statewide-table-body">
                     {% for t in totals|reverse %}
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-4 py-3 font-medium">FY{{ t.fiscal_year }}</td>
@@ -154,16 +154,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const baseCost = {{ base_cost|tojson }};
     const admData = {{ adm_data|tojson }};
 
-    const yearLabels = years.map(y => 'FY' + y);
+    // Raw scalar values for hero/stat updates
+    const firstFY = {{ first.fiscal_year }};
+    const latestFY = {{ latest.fiscal_year }};
+    const rawFirstTotalAid = {{ first.total_all_education_aid or 0 }};
+    const rawLatestTotalAid = {{ latest.total_all_education_aid or 0 }};
+    const rawLatestBaseCost = {{ latest.base_cost_per_pupil or 0 }};
+    const rawLatestAidPerPupil = {{ latest.aid_per_pupil or 0 }};
+    const rawFirstBaseCost = {{ first.base_cost_per_pupil or 0 }};
 
-    // Color palette
+    const yearLabels = years.map(y => 'FY' + y);
     const NAVY = '#1e293b';
     const GREEN = '#22C55E';
-    const LIGHT_GREEN = '#4ADE80';
-    const DARK_GREEN = '#166534';
     const SLATE = '#64748B';
 
-    // Common chart options
     const commonOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -171,30 +175,22 @@ document.addEventListener('DOMContentLoaded', function() {
             legend: { display: false },
             tooltip: {
                 callbacks: {
-                    label: function(ctx) {
-                        let val = ctx.parsed.y;
-                        if (val >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
-                        if (val >= 1000) return '$' + (val / 1000).toFixed(0) + 'K';
-                        return '$' + val.toLocaleString();
-                    }
+                    label: function(ctx) { return fmtCurrencyShort(ctx.parsed.y); }
                 }
             }
         },
         scales: {
-            x: {
-                ticks: { maxRotation: 45, font: { size: 11 } }
-            }
+            x: { ticks: { maxRotation: 45, font: { size: 11 } } }
         }
     };
 
-    // 1. Total Aid Bar Chart (adequacy grants - matches hero growth %)
-    new Chart(document.getElementById('totalAidChart'), {
+    const totalAidChart = new Chart(document.getElementById('totalAidChart'), {
         type: 'bar',
         data: {
             labels: yearLabels,
             datasets: [{
                 label: 'Adequacy Aid Grants',
-                data: adequacy,
+                data: adequacy.slice(),
                 backgroundColor: GREEN,
                 borderRadius: 4,
             }]
@@ -203,81 +199,55 @@ document.addEventListener('DOMContentLoaded', function() {
             ...commonOptions,
             scales: {
                 ...commonOptions.scales,
-                y: {
-                    ticks: {
-                        callback: v => v >= 1000000000 ? '$' + (v / 1000000000).toFixed(1) + 'B' : '$' + (v / 1000000).toFixed(0) + 'M',
-                        font: { size: 11 }
-                    }
-                }
+                y: { ticks: { callback: v => v >= 1e9 ? '$'+(v/1e9).toFixed(1)+'B' : '$'+(v/1e6).toFixed(0)+'M', font: { size: 11 } } }
             }
         }
     });
 
-    // 2. Per Pupil Line Chart
-    new Chart(document.getElementById('perPupilChart'), {
+    const perPupilChart = new Chart(document.getElementById('perPupilChart'), {
         type: 'line',
         data: {
             labels: yearLabels,
             datasets: [{
                 label: 'Aid Per Pupil',
-                data: perPupil,
+                data: perPupil.slice(),
                 borderColor: GREEN,
-                backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 4,
-                pointBackgroundColor: GREEN,
-                spanGaps: true,
+                backgroundColor: 'rgba(34,197,94,0.1)',
+                fill: true, tension: 0.3, pointRadius: 4,
+                pointBackgroundColor: GREEN, spanGaps: true,
             }]
         },
         options: {
             ...commonOptions,
             scales: {
                 ...commonOptions.scales,
-                y: {
-                    beginAtZero: false,
-                    ticks: {
-                        callback: v => '$' + v.toLocaleString(),
-                        font: { size: 11 }
-                    }
-                }
+                y: { beginAtZero: false, ticks: { callback: v => '$'+v.toLocaleString(), font: { size: 11 } } }
             }
         }
     });
 
-    // 3. Base Cost Per Pupil
-    new Chart(document.getElementById('baseCostChart'), {
+    const baseCostChart = new Chart(document.getElementById('baseCostChart'), {
         type: 'line',
         data: {
             labels: yearLabels,
             datasets: [{
                 label: 'Base Cost Per Pupil',
-                data: baseCost,
+                data: baseCost.slice(),
                 borderColor: NAVY,
-                backgroundColor: 'rgba(27, 42, 74, 0.1)',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 4,
-                pointBackgroundColor: NAVY,
-                spanGaps: true,
+                backgroundColor: 'rgba(27,42,74,0.1)',
+                fill: true, tension: 0.3, pointRadius: 4,
+                pointBackgroundColor: NAVY, spanGaps: true,
             }]
         },
         options: {
             ...commonOptions,
             scales: {
                 ...commonOptions.scales,
-                y: {
-                    beginAtZero: false,
-                    ticks: {
-                        callback: v => '$' + v.toLocaleString(),
-                        font: { size: 11 }
-                    }
-                }
+                y: { beginAtZero: false, ticks: { callback: v => '$'+v.toLocaleString(), font: { size: 11 } } }
             }
         }
     });
 
-    // 4. Enrollment
     new Chart(document.getElementById('enrollmentChart'), {
         type: 'line',
         data: {
@@ -286,28 +256,72 @@ document.addEventListener('DOMContentLoaded', function() {
                 label: 'Average Daily Membership',
                 data: admData,
                 borderColor: SLATE,
-                backgroundColor: 'rgba(100, 116, 139, 0.1)',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 4,
-                pointBackgroundColor: SLATE,
-                spanGaps: true,
+                backgroundColor: 'rgba(100,116,139,0.1)',
+                fill: true, tension: 0.3, pointRadius: 4,
+                pointBackgroundColor: SLATE, spanGaps: true,
             }]
         },
         options: {
             ...commonOptions,
             scales: {
                 ...commonOptions.scales,
-                y: {
-                    beginAtZero: false,
-                    ticks: {
-                        callback: v => v.toLocaleString(),
-                        font: { size: 11 }
-                    }
-                }
+                y: { beginAtZero: false, ticks: { callback: v => v.toLocaleString(), font: { size: 11 } } }
             }
         }
     });
+
+    // Inflation toggle handler
+    function updateForInflation() {
+        // Update charts (not enrollment)
+        totalAidChart.data.datasets[0].data = adjustArray(adequacy, years);
+        totalAidChart.update();
+        perPupilChart.data.datasets[0].data = adjustArray(perPupil, years);
+        perPupilChart.update();
+        baseCostChart.data.datasets[0].data = adjustArray(baseCost, years);
+        baseCostChart.update();
+
+        // Hero stats
+        document.getElementById('hero-first-aid').textContent = fmtCurrency(adjustVal(rawFirstTotalAid, firstFY));
+        document.getElementById('hero-latest-aid').textContent = fmtCurrency(adjustVal(rawLatestTotalAid, latestFY));
+        document.getElementById('stat-total-aid').textContent = fmtCurrency(adjustVal(rawLatestTotalAid, latestFY));
+        document.getElementById('stat-base-cost').textContent = fmtCurrency(adjustVal(rawLatestBaseCost, latestFY));
+        document.getElementById('stat-aid-per-pupil').textContent = fmtCurrency(adjustVal(rawLatestAidPerPupil, latestFY));
+
+        // Recalculate growth %
+        const adjAdq = adjustArray(adequacy, years);
+        const firstAdq = adjAdq.find(v => v && v > 0);
+        const lastAdq = [...adjAdq].reverse().find(v => v && v > 0);
+        const gp = (firstAdq && lastAdq) ? Math.round(((lastAdq - firstAdq) / firstAdq) * 100) : 0;
+        document.getElementById('hero-growth-pct').textContent = gp + '%';
+        document.getElementById('facts-growth-pct').textContent = '+' + gp + '%';
+
+        // Quick facts base cost
+        const bcEl = document.getElementById('facts-base-cost');
+        if (bcEl) {
+            bcEl.innerHTML = fmtCurrency(adjustVal(rawFirstBaseCost, firstFY)) + ' &rarr; ' + fmtCurrency(adjustVal(rawLatestBaseCost, latestFY));
+        }
+
+        // Data table
+        const tbody = document.getElementById('statewide-table-body');
+        if (!tbody) return;
+        const adjTotal = adjustArray(totalAll, years);
+        const adjPP = adjustArray(perPupil, years);
+        const adjBC = adjustArray(baseCost, years);
+        let html = '';
+        for (let i = years.length - 1; i >= 0; i--) {
+            html += '<tr class="border-b border-gray-100 hover:bg-gray-50">' +
+                '<td class="px-4 py-3 font-medium">FY' + years[i] + '</td>' +
+                '<td class="px-4 py-3 text-right">' + (adjTotal[i] ? fmtCurrency(adjTotal[i]) : '-') + '</td>' +
+                '<td class="px-4 py-3 text-right">' + (admData[i] && admData[i] > 0 ? Math.round(admData[i]).toLocaleString() : '-') + '</td>' +
+                '<td class="px-4 py-3 text-right">' + (adjPP[i] && adjPP[i] > 0 ? fmtCurrency(adjPP[i]) : '-') + '</td>' +
+                '<td class="px-4 py-3 text-right">$' + (adjBC[i] ? adjBC[i].toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '0.00') + '</td>' +
+                '</tr>';
+        }
+        tbody.innerHTML = html;
+    }
+
+    document.addEventListener('inflationToggle', updateForInflation);
+    if (useRealDollars) updateForInflation();
 
     // Hero search
     const heroInput = document.getElementById('hero-search');
