@@ -132,8 +132,8 @@
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-4 py-3 font-medium">FY{{ t.fiscal_year }}</td>
                         <td class="px-4 py-3 text-right">{{ t.total_adequacy_aid|currency_full }}</td>
-                        <td class="px-4 py-3 text-right">{{ "{:,.0f}".format(t.total_adm or 0) }}</td>
-                        <td class="px-4 py-3 text-right">${{ "{:,.0f}".format(t.aid_per_pupil or 0) }}</td>
+                        <td class="px-4 py-3 text-right">{{ "{:,.0f}".format(t.total_adm) if t.total_adm and t.total_adm > 0 else '-' }}</td>
+                        <td class="px-4 py-3 text-right">{{ "${:,.0f}".format(t.aid_per_pupil) if t.aid_per_pupil and t.aid_per_pupil > 0 else '-' }}</td>
                         <td class="px-4 py-3 text-right">${{ "{:,.2f}".format(t.base_cost_per_pupil or 0) }}</td>
                     </tr>
                     {% endfor %}
@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tension: 0.3,
                 pointRadius: 4,
                 pointBackgroundColor: RED,
+                spanGaps: true,
             }]
         },
         options: {
@@ -233,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: {
                 ...commonOptions.scales,
                 y: {
+                    beginAtZero: false,
                     ticks: {
                         callback: v => '$' + v.toLocaleString(),
                         font: { size: 11 }
@@ -256,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tension: 0.3,
                 pointRadius: 4,
                 pointBackgroundColor: NAVY,
+                spanGaps: true,
             }]
         },
         options: {
@@ -263,6 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: {
                 ...commonOptions.scales,
                 y: {
+                    beginAtZero: false,
                     ticks: {
                         callback: v => '$' + v.toLocaleString(),
                         font: { size: 11 }
@@ -286,6 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tension: 0.3,
                 pointRadius: 4,
                 pointBackgroundColor: BLUE,
+                spanGaps: true,
             }]
         },
         options: {
@@ -293,6 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: {
                 ...commonOptions.scales,
                 y: {
+                    beginAtZero: false,
                     ticks: {
                         callback: v => v.toLocaleString(),
                         font: { size: 11 }

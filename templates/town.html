@@ -246,9 +246,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 fill: true,
                 tension: 0.3,
                 pointRadius: 3,
+                spanGaps: true,
             }]
         },
-        options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ticks: { callback: currencyTick } } } }
+        options: { ...commonOpts, scales: { ...commonOpts.scales, y: { beginAtZero: false, ticks: { callback: currencyTick } } } }
     });
 
     // Enrollment
@@ -264,9 +265,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 fill: true,
                 tension: 0.3,
                 pointRadius: 3,
+                spanGaps: true,
             }]
         },
-        options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ticks: { callback: v => v.toLocaleString() } } } }
+        options: { ...commonOpts, scales: { ...commonOpts.scales, y: { beginAtZero: false, ticks: { callback: v => v.toLocaleString() } } } }
     });
 });
 </script>

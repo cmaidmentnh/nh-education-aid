@@ -79,9 +79,9 @@ def index():
     cte = [t.total_cte_aid or 0 for t in totals]
     kindergarten = [t.total_kindergarten_aid or 0 for t in totals]
     total_all = [t.total_all_education_aid or 0 for t in totals]
-    per_pupil = [t.aid_per_pupil or 0 for t in totals]
-    base_cost = [t.base_cost_per_pupil or 0 for t in totals]
-    adm_data = [t.total_adm or 0 for t in totals]
+    per_pupil = [t.aid_per_pupil if t.aid_per_pupil and t.aid_per_pupil > 0 else None for t in totals]
+    base_cost = [t.base_cost_per_pupil if t.base_cost_per_pupil and t.base_cost_per_pupil > 0 else None for t in totals]
+    adm_data = [t.total_adm if t.total_adm and t.total_adm > 0 else None for t in totals]
 
     # Hero stats
     first = totals[0] if totals else None
@@ -142,7 +142,7 @@ def town_detail(name):
     years = [a.fiscal_year for a in adequacy]
     grants = [a.total_adequacy_grant or 0 for a in adequacy]
     total_state = [a.total_state_grant or 0 for a in adequacy]
-    adm_data = [a.adm or 0 for a in adequacy]
+    adm_data = [a.adm if a.adm and a.adm > 0 else None for a in adequacy]
     swept_data = [a.swept or 0 for a in adequacy]
 
     # Calculate growth
@@ -159,7 +159,7 @@ def town_detail(name):
         if a.adm and a.adm > 0 and a.total_adequacy_grant:
             per_pupil.append(round(a.total_adequacy_grant / a.adm, 2))
         else:
-            per_pupil.append(0)
+            per_pupil.append(None)
 
     return render_template('town.html',
                            muni=muni,

@@ -22,15 +22,42 @@ DB_PATH = DATA_DIR / "education_aid.db"
 
 # Known municipality name normalizations
 NAME_FIXES = {
+    # Possessive / apostrophe variants
     "Hart's Location": "Harts Location",
     "Hart's Loc": "Harts Location",
-    "Hart's Location": "Harts Location",
-    "Waterville Valley": "Waterville Valley",
-    "New Castle": "New Castle",
-    "Newcastle": "New Castle",
     "Wentworth's Location": "Wentworths Location",
     "Wentworth's Loc": "Wentworths Location",
-    "Wentworth's Location": "Wentworths Location",
+    "Wentworth Loc. (2)": "Wentworths Location",
+    "Wentworth Loc. (1)": "Wentworths Location",
+    "Wentworth Loc.": "Wentworths Location",
+    "Wentworth Location": "Wentworths Location",
+    # Spelling variants
+    "Newcastle": "New Castle",
+    "Moultonboro": "Moultonborough",
+    "Clarkville": "Clarksville",
+    "Barnstead1": "Barnstead",
+    "Rochester1": "Rochester",
+    "Hillsboro": "Hillsborough",
+    # Unincorporated place name variants
+    "Dix Grant": "Dixs Grant",
+    "Dix's Grant": "Dixs Grant",
+    "Hale's Location": "Hales Location",
+    "Low & Burbank Grant": "Low And Burbanks Grant",
+    "Low & Burbank's Grant": "Low And Burbanks Grant",
+    "Thomas & Merserve's Purchase": "Thompson And Meserves Purchase",
+    "Thomas & Messerve Purchase": "Thompson And Meserves Purchase",
+    "Erving's Grant": "Ervings Grant",
+    "Erving's Location": "Ervings Location",
+    "Bean's Grant": "Beans Grant",
+    "Bean's Purchase": "Beans Purchase",
+    "Cutt's Grant": "Cutts Grant",
+    "Green's Grant": "Greens Grant",
+    "Hadley's Purchase": "Hadleys Purchase",
+    "Pinkham's Grant": "Pinkhams Grant",
+    "Sargent's Purchase": "Sargents Purchase",
+    "Martin's Location": "Martins Location",
+    "Chandler's Purchase": "Chandlers Purchase",
+    "Crawford's Purchase": "Crawfords Purchase",
 }
 
 # Base cost per pupil by fiscal year (from file headers)
@@ -88,8 +115,9 @@ def normalize_name(name):
     # Remove trailing asterisks, numbers, and whitespace
     name = re.sub(r'[\*\#]+$', '', name).strip()
     name = re.sub(r'\s+', ' ', name).strip()
-    # Remove trailing numbers that aren't part of town names
+    # Remove trailing numbers/parenthesized numbers that aren't part of town names
     name = re.sub(r'\s+\d+$', '', name).strip()
+    name = re.sub(r'\s*\(\d+\)\s*$', '', name).strip()
     # Remove "Cooperative" / "Coop" suffixes (school districts, not towns)
     name = re.sub(r'\s+Cooperative\s*\*?$', '', name, flags=re.IGNORECASE).strip()
     name = re.sub(r'\s+Coop\s*\*?$', '', name, flags=re.IGNORECASE).strip()
@@ -103,14 +131,38 @@ def normalize_name(name):
                               'statewide total', 'district', 'total',
                               'entitlement', 'footnote', 'districts',
                               'base adequacy', 'charter schools',
-                              'district id', 'district name'):
+                              'district id', 'district name', 'id',
+                              'grand total', 'payment', 'october',
+                              'state wide:', 'note:'):
+        return None
+    # Reject specific school district names (not actual municipalities)
+    school_districts = {
+        'contookcook valley', 'contoocook valley', 'goshen-lempster',
+        'gov wentworth reg', 'governor wentworth',
+        'gorham randolph shelburne', 'hillsboro-deering', 'hillsboro deering',
+        'hollis-brookline', 'hollis/brookline', 'inter-lakes', 'interlakes',
+        'jaffrey-rindge', 'jaffrey rindge', 'john stark',
+        'kearsarge', 'lincoln-woodstock', 'mascenic',
+        'mascoma valley', 'mascoma valley reg.', 'merrimack valley',
+        'monadnock', 'monadnock regional1', 'newfound', 'newfound area',
+        'oyster river', 'pemi-baker', 'penacook', 'prospect mountain',
+        'rivendell', 'rivendell instersate', 'rivendell interstate',
+        'rivendell/orford', 'sanborn', 'shaker', 'souhegan',
+        'timberlane', 'white mountains', 'white mountains reg.',
+        'winnacunnet', 'winnisquam', 'wilton-lyndeboro',
+        'wilton-lyndeborough',
+    }
+    if lower in school_districts:
         return None
     # Reject if it looks like a header/footnote (contains certain words)
     reject_words = ['expenditure', 'footnote', 'school year', 'education aid',
                     'equal opportunity', 'department of', 'tax rate', 'tax assessment',
                     'cover the', 'budget', 'revenue', 'when tax', 'academy',
                     'compass classical', 'village district', 'co-op', 'school district',
-                    'fall mountain', 'dresden', 'contoocook', 'exeter region']
+                    'fall mountain', 'dresden', 'contoocook', 'exeter region',
+                    'charter school', 'last revised', 'number of students',
+                    'remit columns', 'per hb100', 'excess to',
+                    'july 1', 'july 13', 'base adequacy aid']
     for rw in reject_words:
         if rw in lower:
             return None
@@ -253,6 +305,46 @@ def import_fy04_aid(cursor):
                         swept_rate=4.92)
         count += 1
     print(f"    Imported {count} towns for FY04")
+
+
+def import_fy04_adm(cursor):
+    """FY04: Parse ADM from ad_ed_calc_fy04.csv (Elem ADM + High ADM)."""
+    filepath = DATA_DIR / "ad_ed_calc_fy04.csv"
+    if not filepath.exists():
+        print("  FY04 ADM: FILE NOT FOUND")
+        return
+    rows = read_csv_rows(filepath)
+    print(f"  FY04 ADM calc: {len(rows)} rows")
+    count = 0
+    for row in rows:
+        if len(row) < 5:
+            continue
+        name_str = str(row[0]).strip()
+        if not name_str or not re.match(r'^[A-Za-z]', name_str):
+            continue
+        if name_str.lower().startswith(('state', 'fy', 'base cost', 'nh ', 'new hampshire',
+                                         'department', 'division', 'bureau', '$')):
+            continue
+        name = normalize_name(name_str)
+        if not name:
+            continue
+        # Col 1 = Adj. ELEM ADM-R, Col 2 = High ADM
+        elem_adm = parse_money(row[1])
+        high_adm = parse_money(row[2])
+        total_adm = (elem_adm or 0) + (high_adm or 0)
+        if total_adm <= 0:
+            continue
+        # Also get SPED ADM from col 4
+        sped_adm = parse_money(row[4]) if len(row) > 4 else None
+        # Update existing FY04 record with ADM
+        muni_id = get_or_create_muni(cursor, name)
+        if muni_id:
+            cursor.execute("""UPDATE adequacy_aid SET adm = ?, sped_adm = ?
+                WHERE municipality_id = ? AND fiscal_year = 2004""",
+                (total_adm, sped_adm, muni_id))
+            if cursor.rowcount > 0:
+                count += 1
+    print(f"    Updated {count} towns with FY04 ADM data")
 
 
 def import_fy06(cursor):
@@ -1410,6 +1502,8 @@ def main():
 
     print("\n--- Importing Adequacy Aid ---")
     import_fy04_aid(cursor)
+    conn.commit()
+    import_fy04_adm(cursor)
     conn.commit()
     import_fy06(cursor)
     conn.commit()
