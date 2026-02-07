@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Key Facts - NH Education Funding Facts{% endblock %}
+
+{% block content %}
+<section class="hero-gradient text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-4">Key Facts About NH Education Funding</h1>
+        <p class="text-gray-300 text-lg">The data tells a clear story: New Hampshire has consistently increased education funding.</p>
+    </div>
+</section>
+
+<section class="py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {% set first_year = totals[0] if totals else none %}
+        {% set latest_year = totals[-1] if totals else none %}
+
+        <!-- Fact Cards -->
+        <div class="space-y-8">
+
+            <!-- Fact 1: Total Growth -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gop-red text-white px-6 py-4">
+                    <h2 class="text-xl font-bold">State Education Aid Has Grown Dramatically</h2>
+                </div>
+                <div class="px-6 py-5">
+                    {% if first_year and latest_year %}
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-sm text-gray-500">FY{{ first_year.fiscal_year }}</div>
+                            <div class="text-2xl font-bold text-navy-800">{{ first_year.total_adequacy_aid|currency }}</div>
+                        </div>
+                        <div class="text-3xl text-gop-red font-bold">&rarr;</div>
+                        <div class="text-center">
+                            <div class="text-sm text-gray-500">FY{{ latest_year.fiscal_year }}</div>
+                            <div class="text-2xl font-bold text-navy-800">{{ latest_year.total_adequacy_aid|currency }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <p class="text-gray-600">Total state adequacy aid has grown from approximately $452 million in FY2004 to over $698 million in FY2027 - a <strong>55%+ increase</strong>. This growth has happened even as enrollment has declined, meaning more dollars per student.</p>
+                </div>
+            </div>
+
+            <!-- Fact 2: Per Pupil -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-navy-800 text-white px-6 py-4">
+                    <h2 class="text-xl font-bold">Per-Pupil Funding Has Increased Significantly</h2>
+                </div>
+                <div class="px-6 py-5">
+                    <p class="text-gray-600 mb-3">The base cost of an adequate education per pupil has risen from <strong>$3,390 in FY2004</strong> to <strong>$4,350 in FY2027</strong> - a <strong>28% increase</strong>.</p>
+                    <p class="text-gray-600">On top of base adequacy, the state now provides additional differentiated aid for:</p>
+                    <ul class="mt-2 space-y-1 text-gray-600 list-disc list-inside">
+                        <li><strong>Free & Reduced Lunch pupils</strong>: $2,393/pupil (FY2026)</li>
+                        <li><strong>Special Education students</strong>: $2,185/pupil (FY2026)</li>
+                        <li><strong>English Language Learners</strong>: $832/pupil (FY2026)</li>
+                    </ul>
+                    <p class="text-gray-600 mt-3">These differentiated aids <strong>did not exist before FY2009</strong>. They were created to direct more resources to communities that need them most.</p>
+                </div>
+            </div>
+
+            <!-- Fact 3: New Funding Categories -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gop-red text-white px-6 py-4">
+                    <h2 class="text-xl font-bold">New Funding Categories Have Been Added</h2>
+                </div>
+                <div class="px-6 py-5">
+                    <p class="text-gray-600 mb-3">Since 2004, the legislature has added entirely new categories of education funding that didn't exist before:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold text-navy-800">Extraordinary Needs Grants</h3>
+                            <p class="text-sm text-gray-600">Additional aid for districts with high concentrations of poverty</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold text-navy-800">Fiscal Capacity Disparity Aid</h3>
+                            <p class="text-sm text-gray-600">Helps equalize funding across property-poor and property-rich districts</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold text-navy-800">Hold Harmless Provisions</h3>
+                            <p class="text-sm text-gray-600">Ensures no district sees dramatic year-over-year funding drops</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold text-navy-800">Stabilization Grants</h3>
+                            <p class="text-sm text-gray-600">Smooths transitions when funding formulas change</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fact 4: Declining Enrollment -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-navy-800 text-white px-6 py-4">
+                    <h2 class="text-xl font-bold">More Money Per Student Despite Declining Enrollment</h2>
+                </div>
+                <div class="px-6 py-5">
+                    <p class="text-gray-600">NH public school enrollment has declined from approximately 200,000 students (FY2006) to under 149,000 (FY2027) - a <strong>26% decrease</strong>. Yet total state education funding has <strong>increased 55%+</strong> during the same period.</p>
+                    <p class="text-gray-600 mt-3">This means per-pupil state aid has grown even faster than total funding, roughly doubling from about $2,400 per student to $4,700 per student.</p>
+                </div>
+            </div>
+
+            <!-- Fact 5: SWEPT -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gop-red text-white px-6 py-4">
+                    <h2 class="text-xl font-bold">Understanding SWEPT (Statewide Education Property Tax)</h2>
+                </div>
+                <div class="px-6 py-5">
+                    <p class="text-gray-600 mb-3">The Statewide Education Property Tax (SWEPT) is a state property tax that funds a portion of education costs. It is collected locally but counts toward each town's education funding obligation.</p>
+                    <p class="text-gray-600">In addition to SWEPT, the state provides adequacy grants to cover the difference between the total cost of adequate education and what SWEPT raises locally. For communities where SWEPT raises more than the cost of adequacy, those funds stay local.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="mt-12 text-center">
+            <p class="text-gray-600 mb-4">Look up the exact numbers for your town:</p>
+            <div class="max-w-md mx-auto relative">
+                <input type="text" id="facts-search" placeholder="Search for your town..."
+                       class="w-full px-6 py-3 rounded-xl border-2 border-navy-800 text-lg focus:outline-none focus:ring-2 focus:ring-gop-red">
+                <div id="facts-search-results" class="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl z-50 hidden"></div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('facts-search');
+    const results = document.getElementById('facts-search-results');
+    let timeout;
+    input.addEventListener('input', function() {
+        clearTimeout(timeout);
+        const q = this.value.trim();
+        if (q.length < 2) { results.classList.add('hidden'); return; }
+        timeout = setTimeout(() => {
+            fetch('/api/search?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.length === 0) { results.classList.add('hidden'); return; }
+                    results.innerHTML = data.map(t =>
+                        `<a href="/town/${encodeURIComponent(t.name)}" class="block px-4 py-3 hover:bg-gray-100">${t.name}</a>`
+                    ).join('');
+                    results.classList.remove('hidden');
+                });
+        }, 200);
+    });
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const q = this.value.trim();
+            if (q.length >= 2) {
+                fetch('/api/search?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.length > 0) window.location.href = '/town/' + encodeURIComponent(data[0].name);
+                    });
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

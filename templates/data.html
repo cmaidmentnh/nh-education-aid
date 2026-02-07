@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Data Download - NH Education Funding Facts{% endblock %}
+
+{% block content %}
+<section class="hero-gradient text-white py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-extrabold mb-2">Data & Downloads</h1>
+        <p class="text-gray-300">Download education funding data for any NH municipality.</p>
+    </div>
+</section>
+
+<section class="py-10">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Search for town to download -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-navy-800 mb-4">Download Town Data (CSV)</h2>
+            <p class="text-gray-600 mb-4">Search for a town and download its complete education funding history as a CSV file.</p>
+            <div class="relative max-w-md">
+                <input type="text" id="data-search" placeholder="Search for a town..."
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-navy-800">
+                <div id="data-search-results" class="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl z-50 hidden border"></div>
+            </div>
+        </div>
+
+        <!-- Statewide data download -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-navy-800 mb-4">Statewide Summary</h2>
+            <p class="text-gray-600 mb-4">View the statewide totals via the API.</p>
+            <a href="/api/statewide" target="_blank" class="inline-block bg-navy-800 text-white px-5 py-2 rounded-lg hover:bg-navy-700 transition text-sm">
+                View Statewide JSON
+            </a>
+        </div>
+
+        <!-- All municipalities list -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold text-navy-800 mb-4">All Municipalities ({{ municipalities|length }})</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 max-h-96 overflow-y-auto">
+                {% for m in municipalities %}
+                <a href="/town/{{ m.name }}" class="text-sm text-navy-800 hover:text-gop-red hover:underline py-1">
+                    {{ m.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Data sources -->
+        <div class="bg-gray-100 rounded-xl p-6 mt-8">
+            <h2 class="text-lg font-bold text-navy-800 mb-3">Data Sources</h2>
+            <p class="text-sm text-gray-600">
+                All data is sourced from the NH Department of Education's official adequacy aid calculations
+                and related education funding reports for fiscal years {{ years[0] }} through {{ years[-1] }}.
+                Data categories include adequacy aid, special education catastrophic aid, building aid,
+                charter school aid, CTE tuition & transportation, and kindergarten aid.
+            </p>
+            <p class="text-sm text-gray-500 mt-2">
+                Fiscal years covered: {{ years|join(', ') }}
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('data-search');
+    const results = document.getElementById('data-search-results');
+    let timeout;
+    input.addEventListener('input', function() {
+        clearTimeout(timeout);
+        const q = this.value.trim();
+        if (q.length < 2) { results.classList.add('hidden'); return; }
+        timeout = setTimeout(() => {
+            fetch('/api/search?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.length === 0) { results.classList.add('hidden'); return; }
+                    results.innerHTML = data.map(t =>
+                        `<a href="/api/export/${encodeURIComponent(t.name)}" class="flex items-center justify-between px-4 py-3 hover:bg-gray-100 border-b last:border-0">
+                            <span>${t.name}</span>
+                            <span class="text-xs text-gray-500">Download CSV</span>
+                        </a>`
+                    ).join('');
+                    results.classList.remove('hidden');
+                });
+        }, 200);
+    });
+});
+</script>
+{% endblock %}

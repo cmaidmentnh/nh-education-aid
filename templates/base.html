@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NH Education Funding Facts{% endblock %}</title>
+    <meta name="description" content="{% block description %}Explore New Hampshire's education funding data from 2004-2027. See how state education aid has grown for every town.{% endblock %}">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}NH Education Funding Facts{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}NH state education funding has grown 55%+ since 2004. Look up your town's funding history.{% endblock %}">
+    <meta property="og:type" content="website">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#f0f3f9',
+                            100: '#d9e0ef',
+                            200: '#b3c1df',
+                            300: '#8da2cf',
+                            400: '#6783bf',
+                            500: '#4164af',
+                            600: '#34508c',
+                            700: '#273c69',
+                            800: '#1B2A4A',
+                            900: '#0e1525',
+                        },
+                        gop: {
+                            red: '#E81B23',
+                            light: '#FF4B52',
+                            dark: '#B91420',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hero-gradient {
+            background: linear-gradient(135deg, #1B2A4A 0%, #273c69 50%, #34508c 100%);
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-navy-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="/" class="flex items-center space-x-3">
+                    <div class="text-xl font-bold">NH Education Funding Facts</div>
+                </a>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/" class="hover:text-gray-300 transition">Dashboard</a>
+                    <a href="/facts" class="hover:text-gray-300 transition">Key Facts</a>
+                    <a href="/compare" class="hover:text-gray-300 transition">Compare Towns</a>
+                    <a href="/data" class="hover:text-gray-300 transition">Data</a>
+                    <!-- Search -->
+                    <div class="relative">
+                        <input type="text" id="nav-search" placeholder="Search towns..."
+                               class="bg-navy-700 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-gop-red">
+                        <div id="nav-search-results" class="absolute top-full left-0 mt-1 w-64 bg-white text-gray-900 rounded-lg shadow-xl z-50 hidden"></div>
+                    </div>
+                </div>
+                <!-- Mobile menu button -->
+                <button id="mobile-menu-btn" class="md:hidden p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-navy-700 px-4 pb-4">
+            <a href="/" class="block py-2 hover:text-gray-300">Dashboard</a>
+            <a href="/facts" class="block py-2 hover:text-gray-300">Key Facts</a>
+            <a href="/compare" class="block py-2 hover:text-gray-300">Compare Towns</a>
+            <a href="/data" class="block py-2 hover:text-gray-300">Data</a>
+            <input type="text" id="mobile-search" placeholder="Search towns..."
+                   class="mt-2 bg-navy-600 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-gop-red">
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-navy-800 text-gray-400 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-white font-semibold mb-2">NH Education Funding Facts</h3>
+                    <p class="text-sm">Data sourced from the NH Department of Education. Updated annually.</p>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold mb-2">Data Sources</h3>
+                    <p class="text-sm">All data is from official NH Department of Education adequacy aid calculations, FY2004-FY2027.</p>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold mb-2">About</h3>
+                    <p class="text-sm">This tool helps NH residents understand how state education funding reaches their community.</p>
+                </div>
+            </div>
+            <div class="mt-8 pt-4 border-t border-gray-700 text-sm text-center">
+                &copy; {{ 2026 }} NH House Republicans
+            </div>
+        </div>
+    </footer>
+
+    <!-- Search Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile menu toggle
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileBtn) {
+            mobileBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        }
+
+        // Town search autocomplete
+        function setupSearch(inputId, resultsId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            const resultsContainer = resultsId
+                ? document.getElementById(resultsId)
+                : null;
+
+            let timeout;
+            input.addEventListener('input', function() {
+                clearTimeout(timeout);
+                const q = this.value.trim();
+                if (q.length < 2) {
+                    if (resultsContainer) resultsContainer.classList.add('hidden');
+                    return;
+                }
+                timeout = setTimeout(() => {
+                    fetch('/api/search?q=' + encodeURIComponent(q))
+                        .then(r => r.json())
+                        .then(data => {
+                            if (!resultsContainer) return;
+                            if (data.length === 0) {
+                                resultsContainer.classList.add('hidden');
+                                return;
+                            }
+                            resultsContainer.innerHTML = data.map(t =>
+                                `<a href="/town/${encodeURIComponent(t.name)}" class="block px-4 py-2 hover:bg-gray-100 text-sm">${t.name}</a>`
+                            ).join('');
+                            resultsContainer.classList.remove('hidden');
+                        });
+                }, 200);
+            });
+
+            // Navigate on Enter
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const q = this.value.trim();
+                    if (q.length >= 2) {
+                        fetch('/api/search?q=' + encodeURIComponent(q))
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.length > 0) {
+                                    window.location.href = '/town/' + encodeURIComponent(data[0].name);
+                                }
+                            });
+                    }
+                }
+            });
+        }
+
+        setupSearch('nav-search', 'nav-search-results');
+        setupSearch('mobile-search', null);
+
+        // Close search results on click outside
+        document.addEventListener('click', function(e) {
+            const results = document.getElementById('nav-search-results');
+            if (results && !e.target.closest('#nav-search') && !e.target.closest('#nav-search-results')) {
+                results.classList.add('hidden');
+            }
+        });
+    });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% block title %}NH Education Funding Facts - Dashboard{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-gradient text-white py-16 md:py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4">
+                NH Education Funding Has Grown <span class="text-gop-light">{{ "%.0f"|format(growth_pct) }}%</span>
+            </h1>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                From FY{{ first.fiscal_year }} to FY{{ latest.fiscal_year }}, New Hampshire's state education aid has increased
+                from {{ first.total_adequacy_aid|currency }} to {{ latest.total_adequacy_aid|currency }}.
+                Look up your town below.
+            </p>
+        </div>
+
+        <!-- Hero Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+            <div class="stat-card rounded-xl p-5 text-center">
+                <div class="text-3xl font-bold text-gop-light">{{ latest.total_adequacy_aid|currency }}</div>
+                <div class="text-sm text-gray-300 mt-1">FY{{ latest.fiscal_year }} Total Aid</div>
+            </div>
+            <div class="stat-card rounded-xl p-5 text-center">
+                <div class="text-3xl font-bold text-gop-light">${{ "%.0f"|format(latest.base_cost_per_pupil or 0) }}</div>
+                <div class="text-sm text-gray-300 mt-1">Base Per-Pupil Cost</div>
+            </div>
+            <div class="stat-card rounded-xl p-5 text-center">
+                <div class="text-3xl font-bold text-gop-light">{{ "%.0f"|format(latest.total_adm or 0)|int }}</div>
+                <div class="text-sm text-gray-300 mt-1">Students (ADM)</div>
+            </div>
+            <div class="stat-card rounded-xl p-5 text-center">
+                <div class="text-3xl font-bold text-gop-light">${{ "%.0f"|format(latest.aid_per_pupil or 0) }}</div>
+                <div class="text-sm text-gray-300 mt-1">Aid Per Pupil</div>
+            </div>
+        </div>
+
+        <!-- Town Search -->
+        <div class="max-w-xl mx-auto mt-10">
+            <div class="relative">
+                <input type="text" id="hero-search" placeholder="Look up your town's education funding..."
+                       class="w-full px-6 py-4 rounded-xl text-gray-900 text-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-gop-red/50">
+                <div id="hero-search-results" class="absolute top-full left-0 right-0 mt-2 bg-white text-gray-900 rounded-xl shadow-2xl z-50 hidden overflow-hidden"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Charts Section -->
+<section class="py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-navy-800 mb-8">Statewide Education Funding Over Time</h2>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Total Aid Bar Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Total State Education Aid by Year</h3>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="totalAidChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Aid Per Pupil Line Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Aid Per Pupil</h3>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="perPupilChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Base Cost Per Pupil vs CPI -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Base Per-Pupil Cost Over Time</h3>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="baseCostChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Enrollment Trend -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Enrollment (ADM) Trend</h3>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="enrollmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Facts Strip -->
+<section class="bg-navy-800 text-white py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            <div>
+                <div class="text-2xl font-bold text-gop-light">+{{ "%.0f"|format(growth_pct) }}%</div>
+                <div class="text-gray-300">Growth in State Education Aid Since FY{{ first.fiscal_year }}</div>
+            </div>
+            <div>
+                {% if first and latest and first.base_cost_per_pupil and latest.base_cost_per_pupil %}
+                <div class="text-2xl font-bold text-gop-light">
+                    ${{ "%.0f"|format(first.base_cost_per_pupil) }} &rarr; ${{ "%.0f"|format(latest.base_cost_per_pupil) }}
+                </div>
+                <div class="text-gray-300">Base Per-Pupil Cost Growth</div>
+                {% endif %}
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-gop-light">23 Years</div>
+                <div class="text-gray-300">Of Tracked Education Funding Data</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Data Table -->
+<section class="py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-navy-800 mb-6">Annual Statewide Totals</h2>
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-navy-800 text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Fiscal Year</th>
+                        <th class="px-4 py-3 text-right">Total Adequacy Aid</th>
+                        <th class="px-4 py-3 text-right">ADM</th>
+                        <th class="px-4 py-3 text-right">Aid Per Pupil</th>
+                        <th class="px-4 py-3 text-right">Base Cost/Pupil</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in totals|reverse %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="px-4 py-3 font-medium">FY{{ t.fiscal_year }}</td>
+                        <td class="px-4 py-3 text-right">{{ t.total_adequacy_aid|currency_full }}</td>
+                        <td class="px-4 py-3 text-right">{{ "{:,.0f}".format(t.total_adm or 0) }}</td>
+                        <td class="px-4 py-3 text-right">${{ "{:,.0f}".format(t.aid_per_pupil or 0) }}</td>
+                        <td class="px-4 py-3 text-right">${{ "{:,.2f}".format(t.base_cost_per_pupil or 0) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const years = {{ years|tojson }};
+    const adequacy = {{ adequacy|tojson }};
+    const perPupil = {{ per_pupil|tojson }};
+    const baseCost = {{ base_cost|tojson }};
+    const admData = {{ adm_data|tojson }};
+
+    const yearLabels = years.map(y => 'FY' + y);
+
+    // Color palette
+    const NAVY = '#1B2A4A';
+    const RED = '#E81B23';
+    const LIGHT_RED = '#FF4B52';
+    const BLUE = '#4164af';
+    const LIGHT_BLUE = '#8da2cf';
+
+    // Common chart options
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        let val = ctx.parsed.y;
+                        if (val >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
+                        if (val >= 1000) return '$' + (val / 1000).toFixed(0) + 'K';
+                        return '$' + val.toLocaleString();
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { maxRotation: 45, font: { size: 11 } }
+            }
+        }
+    };
+
+    // 1. Total Aid Bar Chart
+    new Chart(document.getElementById('totalAidChart'), {
+        type: 'bar',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Total Adequacy Aid',
+                data: adequacy,
+                backgroundColor: adequacy.map((_, i) => i >= adequacy.length - 6 ? RED : NAVY),
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ticks: {
+                        callback: v => '$' + (v / 1000000).toFixed(0) + 'M',
+                        font: { size: 11 }
+                    }
+                }
+            }
+        }
+    });
+
+    // 2. Per Pupil Line Chart
+    new Chart(document.getElementById('perPupilChart'), {
+        type: 'line',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Aid Per Pupil',
+                data: perPupil,
+                borderColor: RED,
+                backgroundColor: 'rgba(232, 27, 35, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: RED,
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ticks: {
+                        callback: v => '$' + v.toLocaleString(),
+                        font: { size: 11 }
+                    }
+                }
+            }
+        }
+    });
+
+    // 3. Base Cost Per Pupil
+    new Chart(document.getElementById('baseCostChart'), {
+        type: 'line',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Base Cost Per Pupil',
+                data: baseCost,
+                borderColor: NAVY,
+                backgroundColor: 'rgba(27, 42, 74, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: NAVY,
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ticks: {
+                        callback: v => '$' + v.toLocaleString(),
+                        font: { size: 11 }
+                    }
+                }
+            }
+        }
+    });
+
+    // 4. Enrollment
+    new Chart(document.getElementById('enrollmentChart'), {
+        type: 'line',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Average Daily Membership',
+                data: admData,
+                borderColor: BLUE,
+                backgroundColor: 'rgba(65, 100, 175, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: BLUE,
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ticks: {
+                        callback: v => v.toLocaleString(),
+                        font: { size: 11 }
+                    }
+                }
+            }
+        }
+    });
+
+    // Hero search
+    const heroInput = document.getElementById('hero-search');
+    const heroResults = document.getElementById('hero-search-results');
+    let heroTimeout;
+
+    heroInput.addEventListener('input', function() {
+        clearTimeout(heroTimeout);
+        const q = this.value.trim();
+        if (q.length < 2) { heroResults.classList.add('hidden'); return; }
+        heroTimeout = setTimeout(() => {
+            fetch('/api/search?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.length === 0) { heroResults.classList.add('hidden'); return; }
+                    heroResults.innerHTML = data.map(t =>
+                        `<a href="/town/${encodeURIComponent(t.name)}" class="block px-6 py-3 hover:bg-gray-100 text-base border-b border-gray-100 last:border-0">${t.name}</a>`
+                    ).join('');
+                    heroResults.classList.remove('hidden');
+                });
+        }, 200);
+    });
+
+    heroInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const q = this.value.trim();
+            if (q.length >= 2) {
+                fetch('/api/search?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            window.location.href = '/town/' + encodeURIComponent(data[0].name);
+                        }
+                    });
+            }
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#hero-search') && !e.target.closest('#hero-search-results')) {
+            heroResults.classList.add('hidden');
+        }
+    });
+});
+</script>
+{% endblock %}

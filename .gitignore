@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+*.sqlite
+fy-27-adequacy-muni-summary.xlsx

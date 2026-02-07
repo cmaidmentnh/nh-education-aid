@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Compare Towns - NH Education Funding Facts{% endblock %}
+
+{% block content %}
+<section class="bg-navy-800 text-white py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-extrabold mb-4">Compare Towns</h1>
+        <p class="text-gray-300 mb-6">Select up to 4 towns to compare their education funding side by side.</p>
+
+        <!-- Town selection form -->
+        <form method="get" action="/compare" class="flex flex-wrap gap-3 items-end">
+            {% for i in range(4) %}
+            <div class="relative">
+                <input type="text" name="towns"
+                       value="{{ town_names[i] if town_names|length > i else '' }}"
+                       placeholder="Town {{ i+1 }}"
+                       class="compare-search bg-navy-700 text-white placeholder-gray-400 rounded-lg px-4 py-2 w-48 focus:outline-none focus:ring-2 focus:ring-gop-red"
+                       autocomplete="off">
+                <div class="compare-results absolute top-full left-0 mt-1 w-48 bg-white text-gray-900 rounded-lg shadow-xl z-50 hidden"></div>
+            </div>
+            {% endfor %}
+            <button type="submit" class="bg-gop-red text-white px-6 py-2 rounded-lg font-semibold hover:bg-gop-dark transition">
+                Compare
+            </button>
+        </form>
+    </div>
+</section>
+
+{% if towns_data %}
+<section class="py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Total Aid Comparison -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Total Adequacy Grant</h3>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="compareGrantChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Per Pupil Comparison -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Aid Per Pupil</h3>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="comparePerPupilChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="py-20 text-center">
+    <div class="max-w-xl mx-auto px-4">
+        <p class="text-gray-500 text-lg">Enter town names above and click Compare to see side-by-side funding data.</p>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search autocomplete for compare inputs
+    document.querySelectorAll('.compare-search').forEach(input => {
+        const results = input.nextElementSibling;
+        let timeout;
+        input.addEventListener('input', function() {
+            clearTimeout(timeout);
+            const q = this.value.trim();
+            if (q.length < 2) { results.classList.add('hidden'); return; }
+            timeout = setTimeout(() => {
+                fetch('/api/search?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.length === 0) { results.classList.add('hidden'); return; }
+                        results.innerHTML = data.map(t =>
+                            `<div class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm" data-name="${t.name}">${t.name}</div>`
+                        ).join('');
+                        results.classList.remove('hidden');
+                        results.querySelectorAll('[data-name]').forEach(el => {
+                            el.addEventListener('click', function() {
+                                input.value = this.dataset.name;
+                                results.classList.add('hidden');
+                            });
+                        });
+                    });
+            }, 200);
+        });
+    });
+
+    {% if towns_data %}
+    const townsData = {{ towns_data|tojson }};
+    const colors = ['#E81B23', '#1B2A4A', '#4164af', '#8da2cf'];
+
+    // Collect all unique years
+    const allYears = [...new Set(townsData.flatMap(t => t.years))].sort();
+    const yearLabels = allYears.map(y => 'FY' + y);
+
+    // Grant comparison
+    new Chart(document.getElementById('compareGrantChart'), {
+        type: 'line',
+        data: {
+            labels: yearLabels,
+            datasets: townsData.map((t, i) => ({
+                label: t.name,
+                data: allYears.map(y => {
+                    const idx = t.years.indexOf(y);
+                    return idx >= 0 ? t.grants[idx] : null;
+                }),
+                borderColor: colors[i],
+                backgroundColor: 'transparent',
+                tension: 0.3,
+                pointRadius: 3,
+                spanGaps: true,
+            }))
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true, position: 'top' } },
+            scales: {
+                x: { ticks: { maxRotation: 45, font: { size: 10 } } },
+                y: { ticks: { callback: v => {
+                    if (v >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
+                    if (v >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
+                    return '$' + v;
+                }}}
+            }
+        }
+    });
+
+    // Per pupil comparison
+    new Chart(document.getElementById('comparePerPupilChart'), {
+        type: 'line',
+        data: {
+            labels: yearLabels,
+            datasets: townsData.map((t, i) => ({
+                label: t.name,
+                data: allYears.map(y => {
+                    const idx = t.years.indexOf(y);
+                    return idx >= 0 ? t.per_pupil[idx] : null;
+                }),
+                borderColor: colors[i],
+                backgroundColor: 'transparent',
+                tension: 0.3,
+                pointRadius: 3,
+                spanGaps: true,
+            }))
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true, position: 'top' } },
+            scales: {
+                x: { ticks: { maxRotation: 45, font: { size: 10 } } },
+                y: { ticks: { callback: v => '$' + v.toLocaleString() } }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

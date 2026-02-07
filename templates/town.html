@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block title %}{{ muni.name }} - NH Education Funding Facts{% endblock %}
+{% block og_title %}{{ muni.name }} Education Funding | NH Education Funding Facts{% endblock %}
+{% block og_description %}{{ muni.name }}'s state education funding has grown {{ "%.0f"|format(growth_pct) }}%. See the full funding history.{% endblock %}
+
+{% block content %}
+<!-- Town Header -->
+<section class="hero-gradient text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between">
+            <div>
+                <a href="/" class="text-gray-400 hover:text-white text-sm mb-2 inline-block">&larr; Back to Dashboard</a>
+                <h1 class="text-3xl md:text-4xl font-extrabold">{{ muni.name }}</h1>
+                {% if muni.county %}
+                <p class="text-gray-300 mt-1">{{ muni.county }} County</p>
+                {% endif %}
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-4">
+                {% if growth_pct %}
+                <div class="stat-card rounded-lg px-5 py-3 text-center">
+                    <div class="text-2xl font-bold text-gop-light">{{ "%+.0f"|format(growth_pct) }}%</div>
+                    <div class="text-xs text-gray-300">Funding Growth</div>
+                </div>
+                {% endif %}
+                {% if last_grant %}
+                <div class="stat-card rounded-lg px-5 py-3 text-center">
+                    <div class="text-2xl font-bold text-gop-light">{{ last_grant.total_adequacy_grant|currency }}</div>
+                    <div class="text-xs text-gray-300">FY{{ last_grant.fiscal_year }} Aid</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Charts -->
+<section class="py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Total Funding History -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Total Adequacy Grant History</h3>
+                <div class="chart-container" style="height: 320px;">
+                    <canvas id="grantChart"></canvas>
+                </div>
+            </div>
+
+            <!-- State Grant Breakdown (Grant + SWEPT) -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">State Grant vs SWEPT</h3>
+                <div class="chart-container" style="height: 320px;">
+                    <canvas id="breakdownChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Per Pupil -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Aid Per Pupil</h3>
+                <div class="chart-container" style="height: 320px;">
+                    <canvas id="perPupilChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Enrollment -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Enrollment (ADM)</h3>
+                <div class="chart-container" style="height: 320px;">
+                    <canvas id="admChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Data Table -->
+<section class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-navy-800">Adequacy Aid Detail</h2>
+            <a href="/api/export/{{ muni.name }}" class="text-sm bg-navy-800 text-white px-4 py-2 rounded-lg hover:bg-navy-700 transition">
+                Download CSV
+            </a>
+        </div>
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-navy-800 text-white">
+                    <tr>
+                        <th class="px-3 py-3 text-left">FY</th>
+                        <th class="px-3 py-3 text-right">ADM</th>
+                        <th class="px-3 py-3 text-right">Base Aid</th>
+                        <th class="px-3 py-3 text-right">F&R Aid</th>
+                        <th class="px-3 py-3 text-right">SPED Aid</th>
+                        <th class="px-3 py-3 text-right">ELL Aid</th>
+                        <th class="px-3 py-3 text-right">Total Cost</th>
+                        <th class="px-3 py-3 text-right">SWEPT</th>
+                        <th class="px-3 py-3 text-right font-bold">Adequacy Grant</th>
+                        <th class="px-3 py-3 text-right font-bold">Total State Grant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in adequacy|reverse %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="px-3 py-2 font-medium">{{ a.fiscal_year }}</td>
+                        <td class="px-3 py-2 text-right">{{ "{:,.1f}".format(a.adm) if a.adm else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.base_adequacy_aid|currency_full if a.base_adequacy_aid else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.fr_aid|currency_full if a.fr_aid else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.sped_differentiated_aid|currency_full if a.sped_differentiated_aid else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.ell_aid|currency_full if a.ell_aid else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.total_cost_adequate_ed|currency_full if a.total_cost_adequate_ed else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.swept|currency_full if a.swept else '-' }}</td>
+                        <td class="px-3 py-2 text-right font-semibold text-gop-red">{{ a.total_adequacy_grant|currency_full if a.total_adequacy_grant else '-' }}</td>
+                        <td class="px-3 py-2 text-right font-semibold">{{ a.total_state_grant|currency_full if a.total_state_grant else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+{% if sped %}
+<!-- SPED Aid Table -->
+<section class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-xl font-bold text-navy-800 mb-4">Special Education Catastrophic Aid</h2>
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-navy-700 text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left">FY</th>
+                        <th class="px-4 py-3 text-right">Students</th>
+                        <th class="px-4 py-3 text-right">District Liability</th>
+                        <th class="px-4 py-3 text-right">Total District Cost</th>
+                        <th class="px-4 py-3 text-right">Entitlement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sped|reverse %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="px-4 py-2 font-medium">{{ s.fiscal_year }}</td>
+                        <td class="px-4 py-2 text-right">{{ s.num_students or '-' }}</td>
+                        <td class="px-4 py-2 text-right">{{ s.district_liability|currency_full if s.district_liability else '-' }}</td>
+                        <td class="px-4 py-2 text-right">{{ s.total_district_cost|currency_full if s.total_district_cost else '-' }}</td>
+                        <td class="px-4 py-2 text-right">{{ s.entitlement|currency_full if s.entitlement else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Compare CTA -->
+<section class="py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <a href="/compare?towns={{ muni.name }}" class="inline-block bg-gop-red text-white px-6 py-3 rounded-lg font-semibold hover:bg-gop-dark transition">
+            Compare {{ muni.name }} With Other Towns
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const years = {{ years|tojson }};
+    const grants = {{ grants|tojson }};
+    const totalState = {{ total_state|tojson }};
+    const admData = {{ adm_data|tojson }};
+    const sweptData = {{ swept_data|tojson }};
+    const perPupil = {{ per_pupil|tojson }};
+
+    const yearLabels = years.map(y => 'FY' + y);
+    const NAVY = '#1B2A4A';
+    const RED = '#E81B23';
+    const BLUE = '#4164af';
+
+    const commonOpts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { ticks: { maxRotation: 45, font: { size: 10 } } } }
+    };
+
+    function currencyTick(v) {
+        if (v >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
+        if (v >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
+        return '$' + v;
+    }
+
+    // Grant history
+    new Chart(document.getElementById('grantChart'), {
+        type: 'bar',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Adequacy Grant',
+                data: grants,
+                backgroundColor: RED,
+                borderRadius: 3,
+            }]
+        },
+        options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ticks: { callback: currencyTick } } } }
+    });
+
+    // Breakdown (stacked: grant + swept)
+    new Chart(document.getElementById('breakdownChart'), {
+        type: 'bar',
+        data: {
+            labels: yearLabels,
+            datasets: [
+                {
+                    label: 'Adequacy Grant',
+                    data: grants,
+                    backgroundColor: RED,
+                },
+                {
+                    label: 'SWEPT',
+                    data: sweptData,
+                    backgroundColor: BLUE,
+                }
+            ]
+        },
+        options: {
+            ...commonOpts,
+            plugins: { legend: { display: true, position: 'top' } },
+            scales: {
+                ...commonOpts.scales,
+                x: { stacked: true, ticks: { maxRotation: 45, font: { size: 10 } } },
+                y: { stacked: true, ticks: { callback: currencyTick } }
+            }
+        }
+    });
+
+    // Per Pupil
+    new Chart(document.getElementById('perPupilChart'), {
+        type: 'line',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Per Pupil',
+                data: perPupil,
+                borderColor: RED,
+                backgroundColor: 'rgba(232,27,35,0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+            }]
+        },
+        options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ticks: { callback: currencyTick } } } }
+    });
+
+    // Enrollment
+    new Chart(document.getElementById('admChart'), {
+        type: 'line',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'ADM',
+                data: admData,
+                borderColor: NAVY,
+                backgroundColor: 'rgba(27,42,74,0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+            }]
+        },
+        options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ticks: { callback: v => v.toLocaleString() } } } }
+    });
+});
+</script>
+{% endblock %}
