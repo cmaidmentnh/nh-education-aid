@@ -216,10 +216,10 @@ def compare():
         grants = [a.total_adequacy_grant or 0 for a in adequacy]
         per_pupil = []
         for a in adequacy:
-            if a.adm and a.adm > 0 and a.total_adequacy_grant:
-                per_pupil.append(round(a.total_adequacy_grant / a.adm, 2))
+            if a.adm and a.adm > 0 and a.total_state_grant:
+                per_pupil.append(round(a.total_state_grant / a.adm, 2))
             else:
-                per_pupil.append(0)
+                per_pupil.append(None)
         towns_data.append({
             'name': muni.name,
             'years': years,
