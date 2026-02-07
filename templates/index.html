@@ -154,15 +154,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const baseCost = {{ base_cost|tojson }};
     const admData = {{ adm_data|tojson }};
 
-    // Raw scalar values for hero/stat updates
-    const firstFY = {{ first.fiscal_year }};
-    const latestFY = {{ latest.fiscal_year }};
-    const rawFirstTotalAid = {{ first.total_all_education_aid or 0 }};
-    const rawLatestTotalAid = {{ latest.total_all_education_aid or 0 }};
-    const rawLatestBaseCost = {{ latest.base_cost_per_pupil or 0 }};
-    const rawLatestAidPerPupil = {{ latest.aid_per_pupil or 0 }};
-    const rawFirstBaseCost = {{ first.base_cost_per_pupil or 0 }};
-
     const yearLabels = years.map(y => 'FY' + y);
     const NAVY = '#1e293b';
     const GREEN = '#22C55E';
@@ -269,59 +260,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-
-    // Inflation toggle handler
-    function updateForInflation() {
-        // Update charts (not enrollment)
-        totalAidChart.data.datasets[0].data = adjustArray(adequacy, years);
-        totalAidChart.update();
-        perPupilChart.data.datasets[0].data = adjustArray(perPupil, years);
-        perPupilChart.update();
-        baseCostChart.data.datasets[0].data = adjustArray(baseCost, years);
-        baseCostChart.update();
-
-        // Hero stats
-        document.getElementById('hero-first-aid').textContent = fmtCurrency(adjustVal(rawFirstTotalAid, firstFY));
-        document.getElementById('hero-latest-aid').textContent = fmtCurrency(adjustVal(rawLatestTotalAid, latestFY));
-        document.getElementById('stat-total-aid').textContent = fmtCurrency(adjustVal(rawLatestTotalAid, latestFY));
-        document.getElementById('stat-base-cost').textContent = fmtCurrency(adjustVal(rawLatestBaseCost, latestFY));
-        document.getElementById('stat-aid-per-pupil').textContent = fmtCurrency(adjustVal(rawLatestAidPerPupil, latestFY));
-
-        // Recalculate growth %
-        const adjAdq = adjustArray(adequacy, years);
-        const firstAdq = adjAdq.find(v => v && v > 0);
-        const lastAdq = [...adjAdq].reverse().find(v => v && v > 0);
-        const gp = (firstAdq && lastAdq) ? Math.round(((lastAdq - firstAdq) / firstAdq) * 100) : 0;
-        document.getElementById('hero-growth-pct').textContent = gp + '%';
-        document.getElementById('facts-growth-pct').textContent = '+' + gp + '%';
-
-        // Quick facts base cost
-        const bcEl = document.getElementById('facts-base-cost');
-        if (bcEl) {
-            bcEl.innerHTML = fmtCurrency(adjustVal(rawFirstBaseCost, firstFY)) + ' &rarr; ' + fmtCurrency(adjustVal(rawLatestBaseCost, latestFY));
-        }
-
-        // Data table
-        const tbody = document.getElementById('statewide-table-body');
-        if (!tbody) return;
-        const adjTotal = adjustArray(totalAll, years);
-        const adjPP = adjustArray(perPupil, years);
-        const adjBC = adjustArray(baseCost, years);
-        let html = '';
-        for (let i = years.length - 1; i >= 0; i--) {
-            html += '<tr class="border-b border-gray-100 hover:bg-gray-50">' +
-                '<td class="px-4 py-3 font-medium">FY' + years[i] + '</td>' +
-                '<td class="px-4 py-3 text-right">' + (adjTotal[i] ? fmtCurrency(adjTotal[i]) : '-') + '</td>' +
-                '<td class="px-4 py-3 text-right">' + (admData[i] && admData[i] > 0 ? Math.round(admData[i]).toLocaleString() : '-') + '</td>' +
-                '<td class="px-4 py-3 text-right">' + (adjPP[i] && adjPP[i] > 0 ? fmtCurrency(adjPP[i]) : '-') + '</td>' +
-                '<td class="px-4 py-3 text-right">$' + (adjBC[i] ? adjBC[i].toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '0.00') + '</td>' +
-                '</tr>';
-        }
-        tbody.innerHTML = html;
-    }
-
-    document.addEventListener('inflationToggle', updateForInflation);
-    if (useRealDollars) updateForInflation();
 
     // Hero search
     const heroInput = document.getElementById('hero-search');

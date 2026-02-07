@@ -149,23 +149,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function updateForInflation() {
-        townsData.forEach((t, i) => {
-            compareGrantChart.data.datasets[i].data = allYears.map(y => {
-                const idx = t.years.indexOf(y);
-                return idx >= 0 ? adjustVal(t.grants[idx], y) : null;
-            });
-            comparePerPupilChart.data.datasets[i].data = allYears.map(y => {
-                const idx = t.years.indexOf(y);
-                return idx >= 0 ? adjustVal(t.per_pupil[idx], y) : null;
-            });
-        });
-        compareGrantChart.update();
-        comparePerPupilChart.update();
-    }
-
-    document.addEventListener('inflationToggle', updateForInflation);
-    if (useRealDollars) updateForInflation();
     {% endif %}
 });
 </script>

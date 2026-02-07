@@ -91,13 +91,6 @@
                     <a href="/compare" class="hover:text-gray-300 transition">Compare Towns</a>
                     <a href="/map" class="hover:text-gray-300 transition">Map</a>
                     <a href="/data" class="hover:text-gray-300 transition">Data</a>
-                    <!-- Inflation Toggle (disabled pending review) -->
-                    <!--
-                    <div id="inflation-toggle" class="flex items-center bg-navy-700 rounded-lg text-xs overflow-hidden cursor-pointer select-none">
-                        <span id="toggle-nominal" class="px-3 py-1.5 font-semibold bg-growth text-white transition">Nominal $</span>
-                        <span id="toggle-real" class="px-3 py-1.5 font-semibold text-gray-400 transition">Real $ (FY27)</span>
-                    </div>
-                    -->
                     <!-- Search -->
                     <div class="relative">
                         <input type="text" id="nav-search" placeholder="Search towns..."
@@ -120,13 +113,6 @@
             <a href="/compare" class="block py-2 hover:text-gray-300">Compare Towns</a>
             <a href="/map" class="block py-2 hover:text-gray-300">Map</a>
             <a href="/data" class="block py-2 hover:text-gray-300">Data</a>
-            <!-- Inflation Toggle Mobile (disabled pending review) -->
-            <!--
-            <div id="inflation-toggle-mobile" class="flex items-center bg-navy-600 rounded-lg text-xs overflow-hidden cursor-pointer select-none mt-2 w-fit">
-                <span class="toggle-nominal-m px-3 py-1.5 font-semibold bg-growth text-white transition">Nominal $</span>
-                <span class="toggle-real-m px-3 py-1.5 font-semibold text-gray-400 transition">Real $ (FY27)</span>
-            </div>
-            -->
             <input type="text" id="mobile-search" placeholder="Search towns..."
                    class="mt-2 bg-navy-600 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-growth">
         </div>
@@ -147,7 +133,7 @@
                 </div>
                 <div>
                     <h3 class="text-white font-semibold mb-2">Data Sources</h3>
-                    <p class="text-sm">All data is from official NH Department of Education adequacy aid calculations, FY2004-FY2027.</p>
+                    <p class="text-sm">All data is from official NH Department of Education adequacy aid calculations, FY2004-FY2027. All dollar figures are nominal (not adjusted for inflation).</p>
                 </div>
                 <div>
                     <h3 class="text-white font-semibold mb-2">About</h3>
@@ -160,31 +146,11 @@
         </div>
     </footer>
 
-    <!-- CPI & Inflation Toggle -->
     <script>
-    const CPI = {{ cpi_data|tojson }};
-    const BASE_CPI = CPI[2027] || 355.0;
-    let useRealDollars = false; // disabled pending review
-
-    function adjustVal(value, fy) {
-        if (!useRealDollars || !value || !CPI[fy]) return value;
-        return value * (BASE_CPI / CPI[fy]);
-    }
-
-    function adjustArray(arr, years) {
-        if (!useRealDollars) return arr.slice();
-        return arr.map((v, i) => {
-            if (v === null || v === undefined) return v;
-            const fy = years[i];
-            return CPI[fy] ? v * (BASE_CPI / CPI[fy]) : v;
-        });
-    }
-
     function fmtCurrency(val) {
         if (val === null || val === undefined) return '-';
         return '$' + Math.round(val).toLocaleString();
     }
-
     function fmtCurrencyShort(val) {
         if (val === null || val === undefined) return '-';
         if (Math.abs(val) >= 1e9) return '$' + (val/1e9).toFixed(1) + 'B';
@@ -192,49 +158,11 @@
         if (Math.abs(val) >= 1e3) return '$' + Math.round(val).toLocaleString();
         return '$' + Math.round(val);
     }
-
-    function updateToggleUI() {
-        // Desktop
-        const nom = document.getElementById('toggle-nominal');
-        const real = document.getElementById('toggle-real');
-        if (nom && real) {
-            if (useRealDollars) {
-                nom.className = 'px-3 py-1.5 font-semibold text-gray-400 transition';
-                real.className = 'px-3 py-1.5 font-semibold bg-growth text-white transition';
-            } else {
-                nom.className = 'px-3 py-1.5 font-semibold bg-growth text-white transition';
-                real.className = 'px-3 py-1.5 font-semibold text-gray-400 transition';
-            }
-        }
-        // Mobile
-        document.querySelectorAll('.toggle-nominal-m').forEach(el => {
-            el.className = 'toggle-nominal-m px-3 py-1.5 font-semibold transition ' +
-                (useRealDollars ? 'text-gray-400' : 'bg-growth text-white');
-        });
-        document.querySelectorAll('.toggle-real-m').forEach(el => {
-            el.className = 'toggle-real-m px-3 py-1.5 font-semibold transition ' +
-                (useRealDollars ? 'bg-growth text-white' : 'text-gray-400');
-        });
-    }
-
-    function toggleInflation() {
-        useRealDollars = !useRealDollars;
-        localStorage.setItem('useRealDollars', useRealDollars);
-        updateToggleUI();
-        document.dispatchEvent(new CustomEvent('inflationToggle'));
-    }
     </script>
 
     <!-- Search Script -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Inflation toggle click handlers
-        const toggleDesktop = document.getElementById('inflation-toggle');
-        if (toggleDesktop) toggleDesktop.addEventListener('click', toggleInflation);
-        const toggleMobile = document.getElementById('inflation-toggle-mobile');
-        if (toggleMobile) toggleMobile.addEventListener('click', toggleInflation);
-        updateToggleUI();
-
         // Mobile menu toggle
         const mobileBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
