@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 spanGaps: true,
             }]
         },
-        options: { ...commonOpts, scales: { ...commonOpts.scales, y: { beginAtZero: false, ticks: { callback: currencyTick } } } }
+        options: { ...commonOpts, scales: { ...commonOpts.scales, y: { beginAtZero: false, ticks: { callback: v => '$' + v.toLocaleString() } } } }
     });
 
     // Enrollment
