@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}Funding Map - NH Education Funding Facts{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #map { height: 700px; width: 100%; border-radius: 0.75rem; }
+    .info-panel {
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.95);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+        line-height: 1.5;
+    }
+    .info-panel h4 { margin: 0 0 4px; font-size: 15px; color: #1B2A4A; }
+    .info-panel .stat { font-size: 13px; color: #4b5563; }
+    .info-panel .stat strong { color: #16A34A; }
+    .legend {
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.95);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        line-height: 1.8;
+    }
+    .legend i {
+        width: 18px;
+        height: 12px;
+        display: inline-block;
+        margin-right: 6px;
+        border-radius: 2px;
+        vertical-align: middle;
+    }
+    @media (max-width: 768px) {
+        #map { height: 500px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero-gradient text-white py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-extrabold mb-2">Education Funding Map</h1>
+        <p class="text-gray-300 mb-4">Explore education funding across every NH municipality. Click any town for details.</p>
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-2">
+                <label for="year-select" class="text-sm text-gray-300">Fiscal Year:</label>
+                <select id="year-select" class="bg-navy-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-growth">
+                    {% for y in years|reverse %}
+                    <option value="{{ y }}" {% if loop.first %}selected{% endif %}>FY{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="metric-select" class="text-sm text-gray-300">Color by:</label>
+                <select id="metric-select" class="bg-navy-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-growth">
+                    <option value="per_pupil" selected>Aid Per Pupil</option>
+                    <option value="grant">Total Adequacy Grant</option>
+                    <option value="state_grant">Total State Grant</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="map"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize map centered on NH
+    const map = L.map('map', {
+        center: [43.7, -71.5],
+        zoom: 8,
+        zoomControl: true,
+        scrollWheelZoom: true,
+    });
+
+    // Light basemap
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+        maxZoom: 19,
+    }).addTo(map);
+
+    let geojsonLayer = null;
+    let geojsonData = null;
+    let townData = {};
+
+    // Name mapping for unincorporated places (GeoJSON -> DB)
+    const nameMap = {
+        "Atkinson & Gilmanton": "Atk. & Gilmanton Acad.",
+        "Hart's Location": "Harts Location",
+        "Low & Burbanks": "Low And Burbanks Grant",
+        "Pinkham's Grant": "Pinkhams Grant",
+        "Second College": "Second College Grant",
+        "Thompson & Meserve": "Thompson And Meserves Purchase",
+    };
+
+    // Green color scale (light to dark green)
+    const colorScale = [
+        '#f0fdf4',  // very light green
+        '#bbf7d0',  // light green
+        '#86efac',  // medium-light
+        '#4ade80',  // medium
+        '#22c55e',  // green
+        '#16a34a',  // dark green
+        '#15803d',  // darker green
+        '#166534',  // very dark green
+    ];
+    const NO_DATA_COLOR = '#e5e7eb';
+
+    function getColor(value, min, max) {
+        if (value === null || value === undefined) return NO_DATA_COLOR;
+        if (max === min) return colorScale[4];
+        const ratio = (value - min) / (max - min);
+        const idx = Math.min(Math.floor(ratio * colorScale.length), colorScale.length - 1);
+        return colorScale[idx];
+    }
+
+    function formatCurrency(val) {
+        if (val === null || val === undefined) return 'N/A';
+        if (Math.abs(val) >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
+        if (Math.abs(val) >= 1000) return '$' + Math.round(val).toLocaleString();
+        return '$' + val.toFixed(0);
+    }
+
+    // Info control (hover panel)
+    const info = L.control({ position: 'topright' });
+    info.onAdd = function() {
+        this._div = L.DomUtil.create('div', 'info-panel');
+        this.update();
+        return this._div;
+    };
+    info.update = function(name, data) {
+        if (!name) {
+            this._div.innerHTML = '<h4>Hover over a town</h4>';
+            return;
+        }
+        let html = '<h4>' + name + '</h4>';
+        if (data) {
+            if (data.per_pupil !== null && data.per_pupil !== undefined)
+                html += '<div class="stat">Aid Per Pupil: <strong>' + formatCurrency(data.per_pupil) + '</strong></div>';
+            if (data.grant !== null && data.grant !== undefined)
+                html += '<div class="stat">Adequacy Grant: <strong>' + formatCurrency(data.grant) + '</strong></div>';
+            if (data.adm !== null && data.adm !== undefined)
+                html += '<div class="stat">Students (ADM): <strong>' + Math.round(data.adm).toLocaleString() + '</strong></div>';
+        } else {
+            html += '<div class="stat">No data for this year</div>';
+        }
+        this._div.innerHTML = html;
+    };
+    info.addTo(map);
+
+    // Legend control
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function() {
+        this._div = L.DomUtil.create('div', 'legend');
+        return this._div;
+    };
+    legend.update = function(min, max, metric) {
+        const label = metric === 'per_pupil' ? 'Aid Per Pupil' :
+                      metric === 'grant' ? 'Adequacy Grant' : 'Total State Grant';
+        let html = '<div style="font-weight:600;margin-bottom:4px;">' + label + '</div>';
+        const steps = 5;
+        for (let i = 0; i < steps; i++) {
+            const val = min + (max - min) * (i / (steps - 1));
+            const idx = Math.min(Math.floor((i / (steps - 1)) * colorScale.length), colorScale.length - 1);
+            html += '<i style="background:' + colorScale[idx] + '"></i> ' + formatCurrency(val) + '<br>';
+        }
+        html += '<i style="background:' + NO_DATA_COLOR + '"></i> No data';
+        this._div.innerHTML = html;
+    };
+    legend.addTo(map);
+
+    function getMetric() {
+        return document.getElementById('metric-select').value;
+    }
+
+    function styleFeature(feature) {
+        const name = feature.properties.name;
+        const data = townData[name];
+        const metric = getMetric();
+        const value = data ? data[metric] : null;
+
+        // Calculate min/max from current data
+        const vals = Object.values(townData)
+            .map(d => d[metric])
+            .filter(v => v !== null && v !== undefined && v > 0);
+        const min = Math.min(...vals);
+        const max = Math.max(...vals);
+
+        return {
+            fillColor: getColor(value, min, max),
+            weight: 1.5,
+            opacity: 1,
+            color: '#ffffff',
+            fillOpacity: 0.8,
+        };
+    }
+
+    function onEachFeature(feature, layer) {
+        layer.on({
+            mouseover: function(e) {
+                const layer = e.target;
+                layer.setStyle({ weight: 3, color: '#1B2A4A', fillOpacity: 0.9 });
+                layer.bringToFront();
+                info.update(feature.properties.name, townData[feature.properties.name]);
+            },
+            mouseout: function(e) {
+                geojsonLayer.resetStyle(e.target);
+                info.update();
+            },
+            click: function(e) {
+                const geoName = feature.properties.name;
+                const dbName = nameMap[geoName] || geoName;
+                window.location.href = '/town/' + encodeURIComponent(dbName);
+            }
+        });
+    }
+
+    function updateMap() {
+        const year = document.getElementById('year-select').value;
+        const metric = getMetric();
+
+        fetch('/api/map-data?year=' + year)
+            .then(r => r.json())
+            .then(data => {
+                townData = data;
+
+                if (geojsonLayer) {
+                    geojsonLayer.setStyle(styleFeature);
+                } else if (geojsonData) {
+                    geojsonLayer = L.geoJSON(geojsonData, {
+                        style: styleFeature,
+                        onEachFeature: onEachFeature,
+                    }).addTo(map);
+                }
+
+                // Update legend
+                const vals = Object.values(townData)
+                    .map(d => d[metric])
+                    .filter(v => v !== null && v !== undefined && v > 0);
+                if (vals.length > 0) {
+                    legend.update(Math.min(...vals), Math.max(...vals), metric);
+                }
+            });
+    }
+
+    // Load GeoJSON then load data
+    fetch('/static/data/nh_towns.geojson')
+        .then(r => r.json())
+        .then(data => {
+            geojsonData = data;
+            updateMap();
+        });
+
+    // Event listeners for controls
+    document.getElementById('year-select').addEventListener('change', updateMap);
+    document.getElementById('metric-select').addEventListener('change', updateMap);
+});
+</script>
+{% endblock %}

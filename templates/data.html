@@ -36,7 +36,7 @@
             <h2 class="text-xl font-bold text-navy-800 mb-4">All Municipalities ({{ municipalities|length }})</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 max-h-96 overflow-y-auto">
                 {% for m in municipalities %}
-                <a href="/town/{{ m.name }}" class="text-sm text-navy-800 hover:text-gop-red hover:underline py-1">
+                <a href="/town/{{ m.name }}" class="text-sm text-navy-800 hover:text-growth-dark hover:underline py-1">
                     {{ m.name }}
                 </a>
                 {% endfor %}

@@ -14,12 +14,12 @@
                 <input type="text" name="towns"
                        value="{{ town_names[i] if town_names|length > i else '' }}"
                        placeholder="Town {{ i+1 }}"
-                       class="compare-search bg-navy-700 text-white placeholder-gray-400 rounded-lg px-4 py-2 w-48 focus:outline-none focus:ring-2 focus:ring-gop-red"
+                       class="compare-search bg-navy-700 text-white placeholder-gray-400 rounded-lg px-4 py-2 w-48 focus:outline-none focus:ring-2 focus:ring-growth"
                        autocomplete="off">
                 <div class="compare-results absolute top-full left-0 mt-1 w-48 bg-white text-gray-900 rounded-lg shadow-xl z-50 hidden"></div>
             </div>
             {% endfor %}
-            <button type="submit" class="bg-gop-red text-white px-6 py-2 rounded-lg font-semibold hover:bg-gop-dark transition">
+            <button type="submit" class="bg-growth text-white px-6 py-2 rounded-lg font-semibold hover:bg-growth-dark transition">
                 Compare
             </button>
         </form>
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     {% if towns_data %}
     const townsData = {{ towns_data|tojson }};
-    const colors = ['#E81B23', '#1B2A4A', '#4164af', '#8da2cf'];
+    const colors = ['#22C55E', '#1B2A4A', '#4164af', '#8da2cf'];
 
     // Collect all unique years
     const allYears = [...new Set(townsData.flatMap(t => t.years))].sort();

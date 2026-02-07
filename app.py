@@ -238,6 +238,15 @@ def facts():
     return render_template('facts.html', totals=totals)
 
 
+@app.route('/map')
+def map_page():
+    """Interactive map of NH education funding by town."""
+    years = db.session.query(AdequacyAid.fiscal_year).distinct() \
+        .order_by(AdequacyAid.fiscal_year).all()
+    years = [y[0] for y in years]
+    return render_template('map.html', years=years)
+
+
 @app.route('/data')
 def data_page():
     """Data download page."""
@@ -309,6 +318,55 @@ def api_statewide():
         'aid_per_pupil': t.aid_per_pupil,
         'total_adm': t.total_adm,
     } for t in totals])
+
+
+# GeoJSON name -> DB name mapping for mismatched unincorporated places
+GEO_TO_DB_NAME = {
+    "Atkinson & Gilmanton": "Atk. & Gilmanton Acad.",
+    "Hart's Location": "Harts Location",
+    "Low & Burbanks": "Low And Burbanks Grant",
+    "Pinkham's Grant": "Pinkhams Grant",
+    "Second College": "Second College Grant",
+    "Thompson & Meserve": "Thompson And Meserves Purchase",
+}
+
+
+@app.route('/api/map-data')
+def api_map_data():
+    """Return per-town funding data for a given fiscal year."""
+    year = request.args.get('year', type=int)
+    if not year:
+        return jsonify({'error': 'year parameter required'}), 400
+
+    results = db.session.query(
+        Municipality.name,
+        AdequacyAid.adm,
+        AdequacyAid.total_adequacy_grant,
+        AdequacyAid.total_state_grant,
+        AdequacyAid.swept,
+    ).join(AdequacyAid, Municipality.id == AdequacyAid.municipality_id) \
+     .filter(AdequacyAid.fiscal_year == year).all()
+
+    # Build lookup by DB name
+    db_data = {}
+    for name, adm, grant, state_grant, swept in results:
+        per_pupil = None
+        if adm and adm > 0 and state_grant:
+            per_pupil = round(state_grant / adm, 2)
+        db_data[name] = {
+            'adm': adm,
+            'grant': grant,
+            'state_grant': state_grant,
+            'swept': swept,
+            'per_pupil': per_pupil,
+        }
+
+    # Also provide data keyed by GeoJSON names
+    for geo_name, db_name in GEO_TO_DB_NAME.items():
+        if db_name in db_data:
+            db_data[geo_name] = db_data[db_name]
+
+    return jsonify(db_data)
 
 
 @app.route('/api/export/<name>')

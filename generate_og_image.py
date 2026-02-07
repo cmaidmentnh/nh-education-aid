@@ -37,13 +37,13 @@ for y in range(HEIGHT):
     b = int(62 + t * 35)
     draw.line([(0, y), (WIDTH, y)], fill=(r, g, min(b, 255)))
 
-# Top red accent bar
-draw.rectangle([(0, 0), (WIDTH, 5)], fill=(232, 27, 35))
+# Top green accent bar
+draw.rectangle([(0, 0), (WIDTH, 5)], fill=(34, 197, 94))
 
 # Subtle diagonal accent line (decorative)
 for i in range(3):
     offset = 40 + i * 3
-    draw.line([(WIDTH - 300, 0), (WIDTH, offset)], fill=(232, 27, 35, 60), width=1)
+    draw.line([(WIDTH - 300, 0), (WIDTH, offset)], fill=(34, 197, 94, 60), width=1)
 
 # Title
 title = "NH Education Funding Facts"
@@ -55,7 +55,7 @@ draw.text(((WIDTH - tw) / 2, 55), title, fill=(255, 255, 255), font=font_heavy_x
 subtitle = "State Education Aid Has Grown 54%"
 bbox = draw.textbbox((0, 0), subtitle, font=font_bold_lg)
 tw = bbox[2] - bbox[0]
-draw.text(((WIDTH - tw) / 2, 132), subtitle, fill=(255, 75, 82), font=font_bold_lg)
+draw.text(((WIDTH - tw) / 2, 132), subtitle, fill=(74, 222, 128), font=font_bold_lg)
 
 # Description
 desc = "FY2004 - FY2027  |  Look up your town's funding history"
@@ -96,7 +96,7 @@ for i, (value, label) in enumerate(stats):
     # Value - centered
     bbox = draw.textbbox((0, 0), value, font=font_bold_stat)
     vw = bbox[2] - bbox[0]
-    draw.text((x + (box_width - vw) / 2, start_y + 20), value, fill=(255, 75, 82), font=font_bold_stat)
+    draw.text((x + (box_width - vw) / 2, start_y + 20), value, fill=(74, 222, 128), font=font_bold_stat)
 
     # Label - centered, wraps if needed
     bbox = draw.textbbox((0, 0), label, font=font_demi_label)
@@ -106,8 +106,8 @@ for i, (value, label) in enumerate(stats):
 # Bottom separator
 draw.rectangle([(150, 420), (WIDTH - 150, 421)], fill=(50, 65, 100))
 
-# Red accent bar near bottom
-draw.rectangle([(80, 440), (WIDTH - 80, 443)], fill=(232, 27, 35))
+# Green accent bar near bottom
+draw.rectangle([(80, 440), (WIDTH - 80, 443)], fill=(34, 197, 94))
 
 # Domain
 domain = "educationaid.nhhouse.gop"
@@ -121,8 +121,8 @@ bbox = draw.textbbox((0, 0), attr, font=font_regular_sm)
 tw = bbox[2] - bbox[0]
 draw.text(((WIDTH - tw) / 2, 520), attr, fill=(90, 105, 135), font=font_regular_sm)
 
-# Bottom red accent
-draw.rectangle([(0, HEIGHT - 5), (WIDTH, HEIGHT)], fill=(232, 27, 35))
+# Bottom green accent
+draw.rectangle([(0, HEIGHT - 5), (WIDTH, HEIGHT)], fill=(34, 197, 94))
 
 # Paid for disclaimer
 disclaimer = "Paid for by Committee to Elect House Republicans"

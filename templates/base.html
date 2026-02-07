@@ -39,6 +39,12 @@
                             red: '#E81B23',
                             light: '#FF4B52',
                             dark: '#B91420',
+                        },
+                        growth: {
+                            DEFAULT: '#22C55E',
+                            light: '#4ADE80',
+                            dark: '#16A34A',
+                            bright: '#86EFAC',
                         }
                     }
                 }
@@ -83,11 +89,12 @@
                     <a href="/" class="hover:text-gray-300 transition">Dashboard</a>
                     <a href="/facts" class="hover:text-gray-300 transition">Key Facts</a>
                     <a href="/compare" class="hover:text-gray-300 transition">Compare Towns</a>
+                    <a href="/map" class="hover:text-gray-300 transition">Map</a>
                     <a href="/data" class="hover:text-gray-300 transition">Data</a>
                     <!-- Search -->
                     <div class="relative">
                         <input type="text" id="nav-search" placeholder="Search towns..."
-                               class="bg-navy-700 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-gop-red">
+                               class="bg-navy-700 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-growth">
                         <div id="nav-search-results" class="absolute top-full left-0 mt-1 w-64 bg-white text-gray-900 rounded-lg shadow-xl z-50 hidden"></div>
                     </div>
                 </div>
@@ -104,9 +111,10 @@
             <a href="/" class="block py-2 hover:text-gray-300">Dashboard</a>
             <a href="/facts" class="block py-2 hover:text-gray-300">Key Facts</a>
             <a href="/compare" class="block py-2 hover:text-gray-300">Compare Towns</a>
+            <a href="/map" class="block py-2 hover:text-gray-300">Map</a>
             <a href="/data" class="block py-2 hover:text-gray-300">Data</a>
             <input type="text" id="mobile-search" placeholder="Search towns..."
-                   class="mt-2 bg-navy-600 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-gop-red">
+                   class="mt-2 bg-navy-600 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-growth">
         </div>
     </nav>
 
