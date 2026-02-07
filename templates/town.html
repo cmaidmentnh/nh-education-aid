@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ muni.name }} - NH Education Funding Facts{% endblock %}
 {% block og_title %}{{ muni.name }} Education Funding | NH Education Funding Facts{% endblock %}
-{% block og_description %}{{ muni.name }}'s state education funding has grown {{ "%.0f"|format(growth_pct) }}%. See the full funding history.{% endblock %}
+{% block og_description %}{% if growth_pct and growth_pct > 0 %}{{ muni.name }}'s state education funding has grown {{ "%.0f"|format(growth_pct) }}%. {% endif %}See {{ muni.name }}'s full education funding history.{% endblock %}
 
 {% block content %}
 <!-- Town Header -->
@@ -16,9 +16,9 @@
                 {% endif %}
             </div>
             <div class="mt-4 md:mt-0 flex space-x-4">
-                {% if growth_pct %}
+                {% if growth_pct and growth_pct > 0 %}
                 <div class="stat-card rounded-lg px-5 py-3 text-center">
-                    <div class="text-2xl font-bold text-gop-light">{{ "%+.0f"|format(growth_pct) }}%</div>
+                    <div class="text-2xl font-bold text-gop-light">+{{ "%.0f"|format(growth_pct) }}%</div>
                     <div class="text-xs text-gray-300">Funding Growth</div>
                 </div>
                 {% endif %}
@@ -26,6 +26,12 @@
                 <div class="stat-card rounded-lg px-5 py-3 text-center">
                     <div class="text-2xl font-bold text-gop-light">{{ last_grant.total_adequacy_grant|currency }}</div>
                     <div class="text-xs text-gray-300">FY{{ last_grant.fiscal_year }} Aid</div>
+                </div>
+                {% endif %}
+                {% if enrollment_change_pct and enrollment_change_pct != 0 %}
+                <div class="stat-card rounded-lg px-5 py-3 text-center">
+                    <div class="text-2xl font-bold text-gop-light">{{ "%+.0f"|format(enrollment_change_pct) }}%</div>
+                    <div class="text-xs text-gray-300">Enrollment Change</div>
                 </div>
                 {% endif %}
             </div>

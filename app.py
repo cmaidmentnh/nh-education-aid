@@ -161,6 +161,14 @@ def town_detail(name):
         else:
             per_pupil.append(None)
 
+    # Enrollment change
+    first_adm = next((a for a in adequacy if a.adm and a.adm > 0), None)
+    last_adm = next((a for a in reversed(adequacy) if a.adm and a.adm > 0), None)
+    enrollment_change_pct = 0
+    if first_adm and last_adm and first_adm.adm:
+        enrollment_change_pct = ((last_adm.adm - first_adm.adm)
+                                 / first_adm.adm) * 100
+
     return render_template('town.html',
                            muni=muni,
                            adequacy=adequacy,
@@ -176,7 +184,10 @@ def town_detail(name):
                            per_pupil=per_pupil,
                            growth_pct=growth_pct,
                            first_grant=first_grant,
-                           last_grant=last_grant)
+                           last_grant=last_grant,
+                           enrollment_change_pct=enrollment_change_pct,
+                           first_adm=first_adm,
+                           last_adm=last_adm)
 
 
 @app.route('/compare')
