@@ -71,7 +71,7 @@
 
             <!-- Total Aid Bar Chart -->
             <div class="bg-white rounded-xl shadow-md p-6">
-                <h3 class="text-lg font-semibold text-navy-800 mb-4">Total State Education Aid by Year</h3>
+                <h3 class="text-lg font-semibold text-navy-800 mb-4">Adequacy Aid Grants by Year</h3>
                 <div class="chart-container" style="height: 350px;">
                     <canvas id="totalAidChart"></canvas>
                 </div>
@@ -187,15 +187,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // 1. Total Aid Bar Chart
+    // 1. Total Aid Bar Chart (adequacy grants - matches hero growth %)
     new Chart(document.getElementById('totalAidChart'), {
         type: 'bar',
         data: {
             labels: yearLabels,
             datasets: [{
-                label: 'Total State Education Aid',
-                data: totalAll,
-                backgroundColor: totalAll.map((_, i) => i >= totalAll.length - 6 ? RED : NAVY),
+                label: 'Adequacy Aid Grants',
+                data: adequacy,
+                backgroundColor: adequacy.map((_, i) => i >= adequacy.length - 6 ? RED : NAVY),
                 borderRadius: 4,
             }]
         },
