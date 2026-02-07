@@ -169,6 +169,13 @@ def town_detail(name):
         enrollment_change_pct = ((last_adm.adm - first_adm.adm)
                                  / first_adm.adm) * 100
 
+    # Per-pupil aid growth
+    first_pp = next((pp for pp in per_pupil if pp and pp > 0), None)
+    last_pp = next((pp for pp in reversed(per_pupil) if pp and pp > 0), None)
+    per_pupil_growth_pct = 0
+    if first_pp and last_pp:
+        per_pupil_growth_pct = ((last_pp - first_pp) / first_pp) * 100
+
     return render_template('town.html',
                            muni=muni,
                            adequacy=adequacy,
@@ -187,7 +194,8 @@ def town_detail(name):
                            last_grant=last_grant,
                            enrollment_change_pct=enrollment_change_pct,
                            first_adm=first_adm,
-                           last_adm=last_adm)
+                           last_adm=last_adm,
+                           per_pupil_growth_pct=per_pupil_growth_pct)
 
 
 @app.route('/compare')

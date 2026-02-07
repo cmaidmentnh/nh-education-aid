@@ -15,11 +15,17 @@
                 <p class="text-gray-300 mt-1">{{ muni.county }} County</p>
                 {% endif %}
             </div>
-            <div class="mt-4 md:mt-0 flex space-x-4">
+            <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+                {% if per_pupil_growth_pct and per_pupil_growth_pct > 0 %}
+                <div class="stat-card rounded-lg px-5 py-3 text-center">
+                    <div class="text-2xl font-bold text-gop-light">+{{ "%.0f"|format(per_pupil_growth_pct) }}%</div>
+                    <div class="text-xs text-gray-300">Per-Pupil Aid Growth</div>
+                </div>
+                {% endif %}
                 {% if growth_pct and growth_pct > 0 %}
                 <div class="stat-card rounded-lg px-5 py-3 text-center">
                     <div class="text-2xl font-bold text-gop-light">+{{ "%.0f"|format(growth_pct) }}%</div>
-                    <div class="text-xs text-gray-300">Funding Growth</div>
+                    <div class="text-xs text-gray-300">Total Funding Growth</div>
                 </div>
                 {% endif %}
                 {% if last_grant %}
@@ -129,25 +135,20 @@
 <section class="py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="text-xl font-bold text-navy-800 mb-4">Special Education Catastrophic Aid</h2>
-        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+        <p class="text-sm text-gray-500 mb-3">State reimbursement for high-cost special education students whose costs exceed 3.5x the average per-pupil expenditure. This is in addition to the adequacy aid above.</p>
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto max-w-md">
             <table class="w-full text-sm">
                 <thead class="bg-navy-700 text-white">
                     <tr>
-                        <th class="px-4 py-3 text-left">FY</th>
-                        <th class="px-4 py-3 text-right">Students</th>
-                        <th class="px-4 py-3 text-right">District Liability</th>
-                        <th class="px-4 py-3 text-right">Total District Cost</th>
-                        <th class="px-4 py-3 text-right">Entitlement</th>
+                        <th class="px-4 py-3 text-left">Fiscal Year</th>
+                        <th class="px-4 py-3 text-right">State Aid</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for s in sped|reverse %}
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="px-4 py-2 font-medium">{{ s.fiscal_year }}</td>
-                        <td class="px-4 py-2 text-right">{{ s.num_students or '-' }}</td>
-                        <td class="px-4 py-2 text-right">{{ s.district_liability|currency_full if s.district_liability else '-' }}</td>
-                        <td class="px-4 py-2 text-right">{{ s.total_district_cost|currency_full if s.total_district_cost else '-' }}</td>
-                        <td class="px-4 py-2 text-right">{{ s.entitlement|currency_full if s.entitlement else '-' }}</td>
+                        <td class="px-4 py-2 font-medium">FY{{ s.fiscal_year }}</td>
+                        <td class="px-4 py-2 text-right font-semibold">{{ s.entitlement|currency_full if s.entitlement else '-' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
