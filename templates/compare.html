@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     {% if towns_data %}
     const townsData = {{ towns_data|tojson }};
-    const colors = ['#22C55E', '#1B2A4A', '#64748B', '#94A3B8'];
+    const colors = ['#22C55E', '#1e293b', '#64748B', '#94A3B8'];
 
     // Collect all unique years
     const allYears = [...new Set(townsData.flatMap(t => t.years))].sort();

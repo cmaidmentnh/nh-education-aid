@@ -4,34 +4,61 @@
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-    #map { height: 700px; width: 100%; border-radius: 0.75rem; }
-    .info-panel {
-        padding: 8px 12px;
-        background: rgba(255,255,255,0.95);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        border-radius: 8px;
-        font-family: 'Inter', sans-serif;
-        line-height: 1.5;
+    #map {
+        height: 750px;
+        width: 100%;
+        border-radius: 0.75rem;
+        background: #ffffff;
     }
-    .info-panel h4 { margin: 0 0 4px; font-size: 15px; color: #1B2A4A; }
-    .info-panel .stat { font-size: 13px; color: #4b5563; }
-    .info-panel .stat strong { color: #15803d; }
+    .info-panel {
+        padding: 12px 16px;
+        background: white;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        border-radius: 10px;
+        font-family: 'Inter', sans-serif;
+        line-height: 1.6;
+        min-width: 180px;
+    }
+    .info-panel h4 {
+        margin: 0 0 6px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .info-panel .stat {
+        font-size: 13px;
+        color: #64748b;
+    }
+    .info-panel .stat strong {
+        color: #0f172a;
+        font-weight: 600;
+    }
     .legend {
-        padding: 8px 12px;
-        background: rgba(255,255,255,0.95);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        border-radius: 8px;
+        padding: 10px 14px;
+        background: white;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        border-radius: 10px;
         font-family: 'Inter', sans-serif;
         font-size: 12px;
-        line-height: 1.8;
+        line-height: 2;
+    }
+    .legend-title {
+        font-weight: 700;
+        font-size: 13px;
+        margin-bottom: 4px;
+        color: #0f172a;
     }
     .legend i {
-        width: 18px;
-        height: 12px;
+        width: 20px;
+        height: 14px;
         display: inline-block;
-        margin-right: 6px;
-        border-radius: 2px;
+        margin-right: 8px;
+        border-radius: 3px;
         vertical-align: middle;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+    .leaflet-container {
+        background: #ffffff !important;
     }
     @media (max-width: 768px) {
         #map { height: 500px; }
@@ -43,7 +70,7 @@
 <section class="hero-gradient text-white py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-3xl font-extrabold mb-2">Education Funding Map</h1>
-        <p class="text-gray-300 mb-4">Explore education funding across every NH municipality. Click any town for details.</p>
+        <p class="text-gray-300 mb-4">Explore education funding across every NH municipality. Hover for details, click to view full history.</p>
         <div class="flex flex-wrap items-center gap-4">
             <div class="flex items-center gap-2">
                 <label for="year-select" class="text-sm text-gray-300">Fiscal Year:</label>
@@ -76,25 +103,21 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize map centered on NH
     const map = L.map('map', {
-        center: [43.7, -71.5],
+        center: [43.8, -71.5],
         zoom: 8,
         zoomControl: true,
         scrollWheelZoom: true,
+        attributionControl: false,
     });
 
-    // Light basemap
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
-        maxZoom: 19,
-    }).addTo(map);
+    // No tile layer - clean white background, just the shapes
 
     let geojsonLayer = null;
     let geojsonData = null;
     let townData = {};
+    let cachedMinMax = { min: 0, max: 1 };
 
-    // Name mapping for unincorporated places (GeoJSON -> DB)
     const nameMap = {
         "Atkinson & Gilmanton": "Atk. & Gilmanton Acad.",
         "Hart's Location": "Harts Location",
@@ -104,23 +127,23 @@ document.addEventListener('DOMContentLoaded', function() {
         "Thompson & Meserve": "Thompson And Meserves Purchase",
     };
 
-    // Green color scale - cream/white to deep green for max contrast
+    // 7-step sequential green: white -> bright green -> deep green
     const colorScale = [
-        '#fefce8',  // warm cream (lowest)
-        '#d9f99d',  // lime-200
-        '#a3e635',  // lime-400
-        '#65a30d',  // lime-700
-        '#22c55e',  // green-500
-        '#16a34a',  // green-600
-        '#15803d',  // green-700
-        '#14532d',  // green-900 (highest)
+        '#f7fee7',
+        '#d9f99d',
+        '#a3e635',
+        '#4ade80',
+        '#22c55e',
+        '#15803d',
+        '#14532d',
     ];
     const NO_DATA_COLOR = '#f1f5f9';
 
-    function getColor(value, min, max) {
+    function getColor(value) {
         if (value === null || value === undefined) return NO_DATA_COLOR;
-        if (max === min) return colorScale[4];
-        const ratio = (value - min) / (max - min);
+        const { min, max } = cachedMinMax;
+        if (max === min) return colorScale[3];
+        const ratio = Math.max(0, Math.min(1, (value - min) / (max - min)));
         const idx = Math.min(Math.floor(ratio * colorScale.length), colorScale.length - 1);
         return colorScale[idx];
     }
@@ -128,11 +151,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatCurrency(val) {
         if (val === null || val === undefined) return 'N/A';
         if (Math.abs(val) >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
-        if (Math.abs(val) >= 1000) return '$' + Math.round(val).toLocaleString();
-        return '$' + val.toFixed(0);
+        return '$' + Math.round(val).toLocaleString();
     }
 
-    // Info control (hover panel)
+    // Info panel
     const info = L.control({ position: 'topright' });
     info.onAdd = function() {
         this._div = L.DomUtil.create('div', 'info-panel');
@@ -146,36 +168,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         let html = '<h4>' + name + '</h4>';
         if (data) {
-            if (data.per_pupil !== null && data.per_pupil !== undefined)
+            if (data.per_pupil != null)
                 html += '<div class="stat">Aid Per Pupil: <strong>' + formatCurrency(data.per_pupil) + '</strong></div>';
-            if (data.grant !== null && data.grant !== undefined)
+            if (data.grant != null)
                 html += '<div class="stat">Adequacy Grant: <strong>' + formatCurrency(data.grant) + '</strong></div>';
-            if (data.adm !== null && data.adm !== undefined)
-                html += '<div class="stat">Students (ADM): <strong>' + Math.round(data.adm).toLocaleString() + '</strong></div>';
+            if (data.adm != null)
+                html += '<div class="stat">Students: <strong>' + Math.round(data.adm).toLocaleString() + '</strong></div>';
         } else {
-            html += '<div class="stat">No data for this year</div>';
+            html += '<div class="stat" style="color:#94a3b8;">No data for this year</div>';
         }
         this._div.innerHTML = html;
     };
     info.addTo(map);
 
-    // Legend control
+    // Legend
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function() {
         this._div = L.DomUtil.create('div', 'legend');
         return this._div;
     };
     legend.update = function(min, max, metric) {
-        const label = metric === 'per_pupil' ? 'Aid Per Pupil' :
-                      metric === 'grant' ? 'Adequacy Grant' : 'Total State Grant';
-        let html = '<div style="font-weight:600;margin-bottom:4px;">' + label + '</div>';
-        const steps = 5;
-        for (let i = 0; i < steps; i++) {
-            const val = min + (max - min) * (i / (steps - 1));
-            const idx = Math.min(Math.floor((i / (steps - 1)) * colorScale.length), colorScale.length - 1);
-            html += '<i style="background:' + colorScale[idx] + '"></i> ' + formatCurrency(val) + '<br>';
+        const labels = {
+            per_pupil: 'Aid Per Pupil',
+            grant: 'Adequacy Grant',
+            state_grant: 'Total State Grant'
+        };
+        let html = '<div class="legend-title">' + labels[metric] + '</div>';
+        for (let i = 0; i < colorScale.length; i++) {
+            const val = min + (max - min) * (i / (colorScale.length - 1));
+            html += '<i style="background:' + colorScale[i] + '"></i>' + formatCurrency(val) + '<br>';
         }
-        html += '<i style="background:' + NO_DATA_COLOR + '"></i> No data';
+        html += '<i style="background:' + NO_DATA_COLOR + '"></i>No data';
         this._div.innerHTML = html;
     };
     legend.addTo(map);
@@ -184,56 +207,70 @@ document.addEventListener('DOMContentLoaded', function() {
         return document.getElementById('metric-select').value;
     }
 
+    function computeMinMax() {
+        const metric = getMetric();
+        const vals = Object.values(townData)
+            .map(d => d[metric])
+            .filter(v => v != null && v > 0);
+        cachedMinMax = {
+            min: vals.length ? Math.min(...vals) : 0,
+            max: vals.length ? Math.max(...vals) : 1,
+        };
+    }
+
     function styleFeature(feature) {
         const name = feature.properties.name;
         const data = townData[name];
         const metric = getMetric();
         const value = data ? data[metric] : null;
 
-        // Calculate min/max from current data
-        const vals = Object.values(townData)
-            .map(d => d[metric])
-            .filter(v => v !== null && v !== undefined && v > 0);
-        const min = Math.min(...vals);
-        const max = Math.max(...vals);
-
         return {
-            fillColor: getColor(value, min, max),
-            weight: 1.5,
+            fillColor: getColor(value),
+            weight: 1,
             opacity: 1,
-            color: '#1B2A4A',
-            fillOpacity: 0.85,
+            color: '#94a3b8',
+            fillOpacity: 0.9,
         };
+    }
+
+    function highlightFeature(e) {
+        e.target.setStyle({
+            weight: 2.5,
+            color: '#0f172a',
+            fillOpacity: 1,
+        });
+        e.target.bringToFront();
+        const name = e.target.feature.properties.name;
+        info.update(name, townData[name]);
+    }
+
+    function resetHighlight(e) {
+        geojsonLayer.resetStyle(e.target);
+        info.update();
+    }
+
+    function clickFeature(e) {
+        const geoName = e.target.feature.properties.name;
+        const dbName = nameMap[geoName] || geoName;
+        window.location.href = '/town/' + encodeURIComponent(dbName);
     }
 
     function onEachFeature(feature, layer) {
         layer.on({
-            mouseover: function(e) {
-                const layer = e.target;
-                layer.setStyle({ weight: 3, color: '#fbbf24', fillOpacity: 0.9 });
-                layer.bringToFront();
-                info.update(feature.properties.name, townData[feature.properties.name]);
-            },
-            mouseout: function(e) {
-                geojsonLayer.resetStyle(e.target);
-                info.update();
-            },
-            click: function(e) {
-                const geoName = feature.properties.name;
-                const dbName = nameMap[geoName] || geoName;
-                window.location.href = '/town/' + encodeURIComponent(dbName);
-            }
+            mouseover: highlightFeature,
+            mouseout: resetHighlight,
+            click: clickFeature,
         });
     }
 
     function updateMap() {
         const year = document.getElementById('year-select').value;
-        const metric = getMetric();
 
         fetch('/api/map-data?year=' + year)
             .then(r => r.json())
             .then(data => {
                 townData = data;
+                computeMinMax();
 
                 if (geojsonLayer) {
                     geojsonLayer.setStyle(styleFeature);
@@ -242,19 +279,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         style: styleFeature,
                         onEachFeature: onEachFeature,
                     }).addTo(map);
+                    map.fitBounds(geojsonLayer.getBounds(), { padding: [20, 20] });
                 }
 
-                // Update legend
-                const vals = Object.values(townData)
-                    .map(d => d[metric])
-                    .filter(v => v !== null && v !== undefined && v > 0);
-                if (vals.length > 0) {
-                    legend.update(Math.min(...vals), Math.max(...vals), metric);
-                }
+                legend.update(cachedMinMax.min, cachedMinMax.max, getMetric());
             });
     }
 
-    // Load GeoJSON then load data
     fetch('/static/data/nh_towns.geojson')
         .then(r => r.json())
         .then(data => {
@@ -262,7 +293,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updateMap();
         });
 
-    // Event listeners for controls
     document.getElementById('year-select').addEventListener('change', updateMap);
     document.getElementById('metric-select').addEventListener('change', updateMap);
 });

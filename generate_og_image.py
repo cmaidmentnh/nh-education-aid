@@ -29,18 +29,18 @@ except Exception:
 img = Image.new('RGB', (WIDTH, HEIGHT))
 draw = ImageDraw.Draw(img)
 
-# Gradient background - deep navy to slightly lighter
+# Gradient background - dark charcoal
 for y in range(HEIGHT):
     t = y / HEIGHT
-    r = int(20 + t * 12)
-    g = int(32 + t * 14)
-    b = int(62 + t * 35)
-    draw.line([(0, y), (WIDTH, y)], fill=(r, g, min(b, 255)))
+    r = int(15 + t * 15)
+    g = int(23 + t * 18)
+    b = int(42 + t * 17)
+    draw.line([(0, y), (WIDTH, y)], fill=(r, g, b))
 
 # Top green accent bar
 draw.rectangle([(0, 0), (WIDTH, 5)], fill=(34, 197, 94))
 # Also add thin gold hover accent
-draw.rectangle([(0, 5), (WIDTH, 7)], fill=(30, 45, 78))
+draw.rectangle([(0, 5), (WIDTH, 7)], fill=(30, 41, 59))
 
 # Subtle diagonal accent line (decorative)
 for i in range(3):
@@ -66,7 +66,7 @@ tw = bbox[2] - bbox[0]
 draw.text(((WIDTH - tw) / 2, 192), desc, fill=(160, 172, 200), font=font_medium)
 
 # Thin separator line
-draw.rectangle([(150, 240), (WIDTH - 150, 241)], fill=(50, 65, 100))
+draw.rectangle([(150, 240), (WIDTH - 150, 241)], fill=(51, 65, 85))
 
 # Stat boxes - 4 cards
 stats = [
@@ -90,7 +90,7 @@ for i, (value, label) in enumerate(stats):
     draw.rounded_rectangle(
         [(x, start_y), (x + box_width, start_y + box_height)],
         radius=10,
-        fill=(30, 45, 78),
+        fill=(30, 41, 59),
         outline=(55, 72, 110),
         width=1
     )
@@ -106,7 +106,7 @@ for i, (value, label) in enumerate(stats):
     draw.text((x + (box_width - lw) / 2, start_y + 78), label, fill=(140, 155, 185), font=font_demi_label)
 
 # Bottom separator
-draw.rectangle([(150, 420), (WIDTH - 150, 421)], fill=(50, 65, 100))
+draw.rectangle([(150, 420), (WIDTH - 150, 421)], fill=(51, 65, 85))
 
 # Green accent bar near bottom
 draw.rectangle([(80, 440), (WIDTH - 80, 443)], fill=(34, 197, 94))
