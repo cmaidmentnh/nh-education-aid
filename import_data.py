@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Import NH Department of Education funding data into SQLite database.
-Handles 137+ CSV/XLSX files spanning FY2004-FY2027 with varying schemas.
+Handles 137+ CSV/XLSX files spanning FY2004-FY2026 with varying schemas.
 """
 
 import csv
@@ -67,7 +67,7 @@ BASE_COST_PER_PUPIL = {
     2013: 3450.00, 2014: 3498.30, 2015: 3561.27, 2016: 3561.27,
     2017: 3636.06, 2018: 3636.06, 2019: 3708.78, 2020: 3708.78,
     2021: 3708.78, 2022: 3786.66, 2023: 3786.66, 2024: 4100.00,
-    2025: 4182.00, 2026: 4265.64, 2027: 4350.00,
+    2025: 4182.00, 2026: 4265.64,
 }
 
 # SWEPT rate per $1,000 by fiscal year
@@ -76,7 +76,7 @@ SWEPT_RATES = {
     2010: 2.135, 2011: 2.19, 2012: 2.325, 2013: 2.39, 2014: 2.435,
     2015: 2.48, 2016: 2.39, 2017: 2.31, 2018: 2.26, 2019: 2.14,
     2020: 2.04, 2021: 1.925, 2022: 1.88, 2023: 1.88, 2024: 1.38,
-    2025: 1.22, 2026: 1.12, 2027: 1.06,
+    2025: 1.22, 2026: 1.12,
 }
 
 
@@ -860,79 +860,6 @@ def import_fy22_to_fy26(cursor):
         print(f"    Imported {count} towns for FY{fy}")
 
 
-def import_fy27(cursor):
-    """FY27: XLSX files (despite .csv extension). Need to rename first.
-    Hardcoded column positions (0-based list indices from XLSX)."""
-    filepath = DATA_DIR / "fy-27-adequacy-muni-summary-csv.csv"
-    xlsx_path = DATA_DIR / "fy-27-adequacy-muni-summary.xlsx"
-    if not filepath.exists() and not xlsx_path.exists():
-        print("  FY27: Skipped (file missing)")
-        return
-    if openpyxl is None:
-        print("  FY27: Skipped (openpyxl not installed)")
-        return
-    # Copy to .xlsx if needed
-    if filepath.exists() and not xlsx_path.exists():
-        import shutil
-        shutil.copy2(filepath, xlsx_path)
-    rows = read_xlsx_rows(xlsx_path)
-    print(f"  FY27: {len(rows)} rows from XLSX")
-
-    # Column positions (0-based list indices, verified from state total row)
-    cols = {
-        'name': 4, 'adm': 5, 'base_aid': 6,
-        'fr_adm': 7, 'fr_aid': 8,
-        'sped_adm': 9, 'sped_aid': 10,
-        'ell_adm': 11, 'ell_aid': 12,
-        'total_cost': 15, 'swept': 16,
-        'adequacy_grant': 25, 'total_state': 27,
-    }
-    skip_words = {'true', 'false', 'state', 'total', 'from', 'base',
-                 'calculated', 'district', 'public', 'school', 'adequacy',
-                 'sfy', 'loc', 'membership', 'statewide', 'loc #',
-                 'state total'}
-
-    count = 0
-    for row in rows:
-        if len(row) < 15:
-            continue
-        candidate = str(row[cols['name']]).strip() if cols['name'] < len(row) and row[cols['name']] else ''
-        if not candidate or not re.match(r'^[A-Za-z]', candidate) or len(candidate) <= 2:
-            continue
-        if candidate.lower() in skip_words:
-            continue
-
-        name = normalize_name(candidate)
-        if not name:
-            continue
-        muni_id = get_or_create_muni(cursor, name)
-        try:
-            def col(key):
-                idx = cols.get(key)
-                if idx is not None and idx < len(row):
-                    return parse_money(row[idx])
-                return None
-
-            upsert_adequacy(cursor, muni_id, 2027,
-                            adm=col('adm'),
-                            base_adequacy_aid=col('base_aid'),
-                            fr_adm=col('fr_adm'),
-                            fr_aid=col('fr_aid'),
-                            sped_adm=col('sped_adm'),
-                            sped_differentiated_aid=col('sped_aid'),
-                            ell_adm=col('ell_adm'),
-                            ell_aid=col('ell_aid'),
-                            total_cost_adequate_ed=col('total_cost'),
-                            swept=col('swept'),
-                            total_adequacy_grant=col('adequacy_grant'),
-                            total_state_grant=col('total_state'),
-                            base_cost_per_pupil=BASE_COST_PER_PUPIL.get(2027),
-                            swept_rate=SWEPT_RATES.get(2027))
-            count += 1
-        except (IndexError, TypeError):
-            continue
-    print(f"    Imported {count} towns for FY27")
-
 
 # ============================================================
 # SPECIAL EDUCATION AID PARSERS
@@ -1518,8 +1445,6 @@ def main():
     import_fy12_to_fy21(cursor)
     conn.commit()
     import_fy22_to_fy26(cursor)
-    conn.commit()
-    import_fy27(cursor)
     conn.commit()
 
     print("\n--- Importing Special Education Aid ---")

@@ -59,7 +59,7 @@ def pct_change_filter(new, old):
 def utility_processor():
     return {
         'min_year': 2004,
-        'max_year': 2027,
+        'max_year': 2026,
     }
 
 

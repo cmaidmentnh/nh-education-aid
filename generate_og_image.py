@@ -60,7 +60,7 @@ tw = bbox[2] - bbox[0]
 draw.text(((WIDTH - tw) / 2, 132), subtitle, fill=(74, 222, 128), font=font_bold_lg)
 
 # Description
-desc = "FY2004 - FY2027  |  Look up your town's funding history"
+desc = "FY2004 - FY2026  |  Look up your town's funding history"
 bbox = draw.textbbox((0, 0), desc, font=font_medium)
 tw = bbox[2] - bbox[0]
 draw.text(((WIDTH - tw) / 2, 192), desc, fill=(160, 172, 200), font=font_medium)
@@ -70,10 +70,10 @@ draw.rectangle([(150, 240), (WIDTH - 150, 241)], fill=(51, 65, 85))
 
 # Stat boxes - 4 cards
 stats = [
-    ("$1.06 Billion", "Total State Aid (FY2027)"),
-    ("$4,350", "Base Cost Per Pupil"),
-    ("148,918", "Students (ADM)"),
-    ("$7,133", "Aid Per Pupil"),
+    ("$1.08 Billion", "Total State Aid (FY2026)"),
+    ("$4,266", "Base Cost Per Pupil"),
+    ("152,140", "Students (ADM)"),
+    ("$7,092", "Aid Per Pupil"),
 ]
 
 box_width = 250
