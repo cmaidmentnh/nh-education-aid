@@ -64,6 +64,49 @@ def utility_processor():
 
 
 # ============================================================
+# SEO / AI CRAWLER ROUTES
+# ============================================================
+
+@app.route('/robots.txt')
+def robots_txt():
+    content = """User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://educationaid.nhhouse.gop/sitemap.xml
+"""
+    return content, 200, {'Content-Type': 'text/plain'}
+
+
+@app.route('/llms.txt')
+def llms_txt():
+    content = """# NH Education Funding Facts
+> educationaid.nhhouse.gop
+
+Interactive tool showing how state education aid has grown for every New Hampshire town from 2004 to 2026.
+
+## Key Pages
+- / - Statewide dashboard with total funding trends and top-level statistics
+- /town/{name} - Detailed funding breakdown for any NH town (e.g., /town/Manchester)
+- /compare - Side-by-side comparison of education funding across multiple towns
+- /facts - Key facts about NH education funding growth
+- /map - Interactive map of per-pupil funding by town
+- /data - Raw data downloads and methodology
+
+## Key Facts
+- NH state education aid has grown 54%+ since 2004
+- Data covers FY2004 through FY2026
+- Includes adequacy aid, stabilization grants, fiscal capacity disparity aid, and other state education funding
+- All 234 NH towns and cities are included
+- Per-pupil and total funding available for every community
+
+## Data Sources
+All data is from official NH Department of Education adequacy aid calculations.
+"""
+    return content, 200, {'Content-Type': 'text/plain'}
+
+
+# ============================================================
 # ROUTES
 # ============================================================
 

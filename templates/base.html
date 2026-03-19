@@ -14,7 +14,30 @@
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ self.og_title() }}">
+    <meta name="twitter:description" content="{{ self.og_description() }}">
     <meta name="twitter:image" content="{% block twitter_image %}https://educationaid.nhhouse.gop/static/img/og-default.png{% endblock %}">
+    <meta property="og:url" content="https://educationaid.nhhouse.gop{{ request.path }}">
+    <meta property="og:site_name" content="NH Education Funding Facts">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "NH Education Funding Facts",
+        "url": "https://educationaid.nhhouse.gop",
+        "description": "Interactive tool showing how state education aid has grown for every New Hampshire town from 2004 to 2026.",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://educationaid.nhhouse.gop/api/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "Committee to Elect House Republicans",
+            "url": "https://electhouserepublicans.com"
+        }
+    }
+    </script>
 
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
