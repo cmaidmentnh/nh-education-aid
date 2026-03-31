@@ -97,8 +97,29 @@
             position: relative;
             width: 100%;
         }
-        th[title] {
+        th[data-tip] {
             cursor: help;
+            position: relative;
+        }
+        th[data-tip]:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: #1e293b;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1.4;
+            padding: 8px 12px;
+            border-radius: 6px;
+            white-space: normal;
+            width: 260px;
+            max-width: 90vw;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            pointer-events: none;
         }
     </style>
     {% block extra_head %}{% endblock %}
