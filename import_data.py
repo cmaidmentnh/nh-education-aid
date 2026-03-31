@@ -727,8 +727,11 @@ def import_fy22_to_fy26(cursor):
             'sped_aid': 16,   # SPED Differentiated Aid
             'ell_adm': 19,    # ELL Membership (base)
             'ell_aid': 20,    # ELL Differentiated Aid
+            'grade3_reading_aid': 24,  # 3rd Grade Reading Differentiated Aid
             'total_cost': 25,  # Total Calculated Cost of Adequate Education
             'swept': 26,       # SWEPT
+            'extraordinary_needs_grant': 29,  # Relief Aid (predecessor to extraordinary needs)
+            'stabilization_grant': 31,  # FY2012 Stabilization Grant
             'adequacy_grant': 34,  # Adequacy Grant (max of preliminary+stab or 95% HH)
             'total_state': 35,     # Final Grant (Adequacy + SWEPT)
         },
@@ -743,8 +746,11 @@ def import_fy22_to_fy26(cursor):
             'sped_aid': 12,   # SPED Aid
             'ell_adm': 13,    # ELL Membership
             'ell_aid': 14,    # ELL Aid
+            'grade3_reading_aid': 16,  # 3rd Grade Reading Differentiated Aid
             'total_cost': 17,  # Total Calculated Cost
             'swept': 18,       # SWEPT
+            'extraordinary_needs_grant': 23,  # Extraordinary Needs Grant
+            'stabilization_grant': 31,  # FY2012 Stabilization Grant
             'adequacy_grant': 34,  # Adequacy Grant
             'total_state': 36,     # Final Grant (Adequacy + SWEPT)
         },
@@ -761,6 +767,8 @@ def import_fy22_to_fy26(cursor):
             'ell_aid': 12,    # ELL Aid
             'total_cost': 13,  # Total Calculated Cost
             'swept': 14,       # SWEPT
+            'extraordinary_needs_grant': 18,  # Extraordinary Needs Grant
+            'hold_harmless_grant': 22,  # Hold Harmless Grant
             'adequacy_grant': 23,  # Adequacy Grant
             'total_state': 25,     # Final Total State Grant
         },
@@ -775,8 +783,11 @@ def import_fy22_to_fy26(cursor):
             'sped_aid': 10,
             'ell_adm': 11,
             'ell_aid': 12,
-            'total_cost': 15,  # Total Calculated Cost (col 13=home_adm, col 14=home_aid)
+            'home_ed_aid': 14,  # Home Education Aid
+            'total_cost': 15,  # Total Calculated Cost
             'swept': 16,       # SWEPT
+            'extraordinary_needs_grant': 20,  # Extraordinary Needs Grant
+            'hold_harmless_grant': 24,  # Hold Harmless Grant
             'adequacy_grant': 27,  # Adequacy Grant
             'total_state': 29,     # Final Total State Grant
         },
@@ -791,8 +802,11 @@ def import_fy22_to_fy26(cursor):
             'sped_aid': 10,
             'ell_adm': 11,
             'ell_aid': 12,
-            'total_cost': 15,  # Total Calculated Cost (col 13=home_adm, col 14=home_aid)
+            'home_ed_aid': 14,  # Home Education Aid
+            'total_cost': 15,  # Total Calculated Cost
             'swept': 16,       # SWEPT
+            'extraordinary_needs_grant': 20,  # Extraordinary Needs Grant Award
+            'hold_harmless_grant': 23,  # Hold Harmless Grant (80% of prior year)
             'adequacy_grant': 26,  # Adequacy Grant
             'total_state': 28,     # Final Total State Grant
         },
@@ -847,8 +861,13 @@ def import_fy22_to_fy26(cursor):
                                 sped_differentiated_aid=col('sped_aid'),
                                 ell_adm=col('ell_adm'),
                                 ell_aid=col('ell_aid'),
+                                grade3_reading_aid=col('grade3_reading_aid'),
+                                home_ed_aid=col('home_ed_aid'),
                                 total_cost_adequate_ed=col('total_cost'),
                                 swept=col('swept'),
+                                extraordinary_needs_grant=col('extraordinary_needs_grant'),
+                                hold_harmless_grant=col('hold_harmless_grant'),
+                                stabilization_grant=col('stabilization_grant'),
                                 total_adequacy_grant=col('adequacy_grant'),
                                 total_state_grant=col('total_state'),
                                 base_cost_per_pupil=BASE_COST_PER_PUPIL.get(fy),
