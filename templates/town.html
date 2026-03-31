@@ -84,42 +84,64 @@
     </div>
 </section>
 
-<!-- Data Table -->
+<!-- Full Data Table -->
 <section class="py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-navy-800">Adequacy Aid Detail</h2>
+            <h2 class="text-xl font-bold text-navy-800">Full Adequacy Aid Data</h2>
             <a href="/api/export/{{ muni.name }}" class="text-sm bg-navy-800 text-white px-4 py-2 rounded-lg hover:bg-navy-700 transition">
                 Download CSV
             </a>
         </div>
         <div class="bg-white rounded-xl shadow-md overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm whitespace-nowrap">
                 <thead class="bg-navy-800 text-white">
                     <tr>
                         <th class="px-3 py-3 text-left">FY</th>
                         <th class="px-3 py-3 text-right">ADM</th>
+                        <th class="px-3 py-3 text-right">F&R ADM</th>
+                        <th class="px-3 py-3 text-right">SPED ADM</th>
+                        <th class="px-3 py-3 text-right">ELL ADM</th>
+                        <th class="px-3 py-3 text-right">Base Cost/Pupil</th>
                         <th class="px-3 py-3 text-right">Base Aid</th>
                         <th class="px-3 py-3 text-right">F&R Aid</th>
-                        <th class="px-3 py-3 text-right">SPED Aid</th>
+                        <th class="px-3 py-3 text-right">SPED Diff. Aid</th>
                         <th class="px-3 py-3 text-right">ELL Aid</th>
+                        <th class="px-3 py-3 text-right">Home Ed Aid</th>
+                        <th class="px-3 py-3 text-right">Gr. 3 Reading</th>
                         <th class="px-3 py-3 text-right">Total Cost</th>
                         <th class="px-3 py-3 text-right">SWEPT</th>
+                        <th class="px-3 py-3 text-right">SWEPT Rate</th>
+                        <th class="px-3 py-3 text-right">Extraordinary Needs</th>
+                        <th class="px-3 py-3 text-right">Hold Harmless</th>
+                        <th class="px-3 py-3 text-right">Fiscal Capacity</th>
+                        <th class="px-3 py-3 text-right">Stabilization</th>
                         <th class="px-3 py-3 text-right font-bold">Adequacy Grant</th>
                         <th class="px-3 py-3 text-right font-bold">Total State Grant</th>
                     </tr>
                 </thead>
-                <tbody id="adequacy-table-body">
+                <tbody>
                     {% for a in adequacy|reverse %}
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-3 py-2 font-medium">{{ a.fiscal_year }}</td>
                         <td class="px-3 py-2 text-right">{{ "{:,.1f}".format(a.adm) if a.adm else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ "{:,.1f}".format(a.fr_adm) if a.fr_adm else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ "{:,.1f}".format(a.sped_adm) if a.sped_adm else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ "{:,.1f}".format(a.ell_adm) if a.ell_adm else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ "${:,.0f}".format(a.base_cost_per_pupil) if a.base_cost_per_pupil else '-' }}</td>
                         <td class="px-3 py-2 text-right">{{ a.base_adequacy_aid|currency_full if a.base_adequacy_aid else '-' }}</td>
                         <td class="px-3 py-2 text-right">{{ a.fr_aid|currency_full if a.fr_aid else '-' }}</td>
                         <td class="px-3 py-2 text-right">{{ a.sped_differentiated_aid|currency_full if a.sped_differentiated_aid else '-' }}</td>
                         <td class="px-3 py-2 text-right">{{ a.ell_aid|currency_full if a.ell_aid else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.home_ed_aid|currency_full if a.home_ed_aid else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.grade3_reading_aid|currency_full if a.grade3_reading_aid else '-' }}</td>
                         <td class="px-3 py-2 text-right">{{ a.total_cost_adequate_ed|currency_full if a.total_cost_adequate_ed else '-' }}</td>
                         <td class="px-3 py-2 text-right">{{ a.swept|currency_full if a.swept else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ "{:.4f}".format(a.swept_rate) if a.swept_rate else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.extraordinary_needs_grant|currency_full if a.extraordinary_needs_grant else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.hold_harmless_grant|currency_full if a.hold_harmless_grant else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.fiscal_capacity_aid|currency_full if a.fiscal_capacity_aid else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ a.stabilization_grant|currency_full if a.stabilization_grant else '-' }}</td>
                         <td class="px-3 py-2 text-right font-semibold text-growth-dark">{{ a.total_adequacy_grant|currency_full if a.total_adequacy_grant else '-' }}</td>
                         <td class="px-3 py-2 text-right font-semibold">{{ a.total_state_grant|currency_full if a.total_state_grant else '-' }}</td>
                     </tr>
@@ -131,24 +153,133 @@
 </section>
 
 {% if sped %}
-<!-- SPED Aid Table -->
+<!-- SPED Catastrophic Aid Table -->
 <section class="py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="text-xl font-bold text-navy-800 mb-4">Special Education Catastrophic Aid</h2>
-        <p class="text-sm text-gray-500 mb-3">State reimbursement for high-cost special education students whose costs exceed 3.5x the average per-pupil expenditure. This is in addition to the adequacy aid above.</p>
-        <div class="bg-white rounded-xl shadow-md overflow-x-auto max-w-md">
-            <table class="w-full text-sm">
+        <p class="text-sm text-gray-500 mb-3">State reimbursement for high-cost special education students whose costs exceed 3.5x the average per-pupil expenditure.</p>
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+            <table class="w-full text-sm whitespace-nowrap">
                 <thead class="bg-navy-700 text-white">
                     <tr>
-                        <th class="px-4 py-3 text-left">Fiscal Year</th>
-                        <th class="px-4 py-3 text-right">State Aid</th>
+                        <th class="px-3 py-3 text-left">FY</th>
+                        <th class="px-3 py-3 text-right">Students</th>
+                        <th class="px-3 py-3 text-right">District Liability</th>
+                        <th class="px-3 py-3 text-right">Cost 3.5-10x</th>
+                        <th class="px-3 py-3 text-right">Students Over 10x</th>
+                        <th class="px-3 py-3 text-right">Cost Over 10x</th>
+                        <th class="px-3 py-3 text-right">Total District Cost</th>
+                        <th class="px-3 py-3 text-right font-bold">Entitlement</th>
+                        <th class="px-3 py-3 text-right">Appropriation</th>
                     </tr>
                 </thead>
-                <tbody id="sped-table-body">
+                <tbody>
                     {% for s in sped|reverse %}
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="px-4 py-2 font-medium">FY{{ s.fiscal_year }}</td>
-                        <td class="px-4 py-2 text-right font-semibold">{{ s.entitlement|currency_full if s.entitlement else '-' }}</td>
+                        <td class="px-3 py-2 font-medium">{{ s.fiscal_year }}</td>
+                        <td class="px-3 py-2 text-right">{{ s.num_students if s.num_students else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ s.district_liability|currency_full if s.district_liability else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ s.cost_3_5_to_10x|currency_full if s.cost_3_5_to_10x else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ s.num_students_over_10x if s.num_students_over_10x else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ s.cost_over_10x|currency_full if s.cost_over_10x else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ s.total_district_cost|currency_full if s.total_district_cost else '-' }}</td>
+                        <td class="px-3 py-2 text-right font-semibold text-growth-dark">{{ s.entitlement|currency_full if s.entitlement else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ s.appropriation|currency_full if s.appropriation else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if building %}
+<!-- Building Aid Table -->
+<section class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-xl font-bold text-navy-800 mb-4">Building Aid</h2>
+        <p class="text-sm text-gray-500 mb-3">State aid for school construction and renovation projects.</p>
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+            <table class="w-full text-sm whitespace-nowrap">
+                <thead class="bg-navy-700 text-white">
+                    <tr>
+                        <th class="px-3 py-3 text-left">FY</th>
+                        <th class="px-3 py-3 text-right">Current Year Aid</th>
+                        <th class="px-3 py-3 text-right">Prior Year Shortfall</th>
+                        <th class="px-3 py-3 text-right font-bold">Total Entitlement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in building|reverse %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="px-3 py-2 font-medium">{{ b.fiscal_year }}</td>
+                        <td class="px-3 py-2 text-right">{{ b.current_year_aid|currency_full if b.current_year_aid else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ b.prior_year_shortfall|currency_full if b.prior_year_shortfall else '-' }}</td>
+                        <td class="px-3 py-2 text-right font-semibold text-growth-dark">{{ b.total_entitlement|currency_full if b.total_entitlement else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if cte %}
+<!-- CTE Aid Table -->
+<section class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-xl font-bold text-navy-800 mb-4">Career & Technical Education Aid</h2>
+        <p class="text-sm text-gray-500 mb-3">State payments for CTE tuition and transportation.</p>
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+            <table class="w-full text-sm whitespace-nowrap">
+                <thead class="bg-navy-700 text-white">
+                    <tr>
+                        <th class="px-3 py-3 text-left">FY</th>
+                        <th class="px-3 py-3 text-right">Tuition Payment</th>
+                        <th class="px-3 py-3 text-right">Transportation Payment</th>
+                        <th class="px-3 py-3 text-right font-bold">Total Payment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in cte|reverse %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="px-3 py-2 font-medium">{{ c.fiscal_year }}</td>
+                        <td class="px-3 py-2 text-right">{{ c.tuition_payment|currency_full if c.tuition_payment else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ c.transportation_payment|currency_full if c.transportation_payment else '-' }}</td>
+                        <td class="px-3 py-2 text-right font-semibold text-growth-dark">{{ c.total_payment|currency_full if c.total_payment else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if kindergarten %}
+<!-- Kindergarten Aid Table -->
+<section class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-xl font-bold text-navy-800 mb-4">Kindergarten Aid</h2>
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+            <table class="w-full text-sm whitespace-nowrap">
+                <thead class="bg-navy-700 text-white">
+                    <tr>
+                        <th class="px-3 py-3 text-left">FY</th>
+                        <th class="px-3 py-3 text-right">ADM</th>
+                        <th class="px-3 py-3 text-right">Per-Pupil Rate</th>
+                        <th class="px-3 py-3 text-right font-bold">Total Aid</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for k in kindergarten|reverse %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="px-3 py-2 font-medium">{{ k.fiscal_year }}</td>
+                        <td class="px-3 py-2 text-right">{{ "{:,.1f}".format(k.adm) if k.adm else '-' }}</td>
+                        <td class="px-3 py-2 text-right">{{ "${:,.0f}".format(k.per_pupil_rate) if k.per_pupil_rate else '-' }}</td>
+                        <td class="px-3 py-2 text-right font-semibold text-growth-dark">{{ k.total_aid|currency_full if k.total_aid else '-' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -10,8 +10,8 @@
                 NH Education Funding Has Grown <span class="text-growth-light" id="hero-growth-pct">{{ "%.0f"|format(growth_pct) }}%</span>
             </h1>
             <p class="text-xl text-gray-300 max-w-3xl mx-auto">
-                From FY{{ first.fiscal_year }} to FY{{ latest.fiscal_year }}, New Hampshire's total state education aid has increased
-                from <span id="hero-first-aid">{{ first.total_all_education_aid|currency_full }}</span> to <span id="hero-latest-aid">{{ latest.total_all_education_aid|currency_full }}</span>.
+                From FY{{ first.fiscal_year }} to FY{{ latest.fiscal_year }}, New Hampshire's state adequacy aid has increased
+                from <span id="hero-first-aid">{{ first.total_adequacy_aid|currency_full }}</span> to <span id="hero-latest-aid">{{ latest.total_adequacy_aid|currency_full }}</span>.
                 Look up your town below.
             </p>
         </div>
@@ -19,8 +19,8 @@
         <!-- Hero Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
             <div class="stat-card rounded-xl p-5 text-center">
-                <div class="text-xl font-bold text-growth-light" id="stat-total-aid">{{ latest.total_all_education_aid|currency_full }}</div>
-                <div class="text-sm text-gray-300 mt-1">FY{{ latest.fiscal_year }} Total Aid</div>
+                <div class="text-xl font-bold text-growth-light" id="stat-total-aid">{{ latest.total_adequacy_aid|currency_full }}</div>
+                <div class="text-sm text-gray-300 mt-1">FY{{ latest.fiscal_year }} Adequacy Aid</div>
             </div>
             <div class="stat-card rounded-xl p-5 text-center">
                 <div class="text-xl font-bold text-growth-light" id="stat-base-cost">${{ "{:,.0f}".format(latest.base_cost_per_pupil or 0) }}</div>
