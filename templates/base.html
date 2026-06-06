@@ -19,6 +19,7 @@
     <meta name="twitter:image" content="{% block twitter_image %}https://educationaid.nhhouse.gop/static/img/og-default.png{% endblock %}">
     <meta property="og:url" content="https://educationaid.nhhouse.gop{{ request.path }}">
     <meta property="og:site_name" content="NH Education Funding Facts">
+    <link rel="canonical" href="https://educationaid.nhhouse.gop{{ request.path }}">
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -32,6 +33,24 @@
             "query-input": "required name=search_term_string"
         },
         "publisher": {
+            "@type": "Organization",
+            "name": "Committee to Elect House Republicans",
+            "url": "https://electhouserepublicans.com"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "New Hampshire State Education Aid by Town (2004-2026)",
+        "description": "Year-by-year New Hampshire state education adequacy aid for every town and school district from 2004 to 2026, including per-pupil amounts, total grants, and enrollment.",
+        "url": "https://educationaid.nhhouse.gop/data",
+        "keywords": ["New Hampshire education funding", "state education aid", "adequacy aid", "per-pupil funding", "school funding", "NH town aid"],
+        "temporalCoverage": "2004/2026",
+        "spatialCoverage": "New Hampshire, USA",
+        "isAccessibleForFree": true,
+        "creator": {
             "@type": "Organization",
             "name": "Committee to Elect House Republicans",
             "url": "https://electhouserepublicans.com"

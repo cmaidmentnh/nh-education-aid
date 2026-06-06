@@ -106,6 +106,27 @@ All data is from official NH Department of Education adequacy aid calculations.
     return content, 200, {'Content-Type': 'text/plain'}
 
 
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    """Generate sitemap including every town detail page."""
+    from urllib.parse import quote
+    base = "https://educationaid.nhhouse.gop"
+    urls = [(f"{base}/", '1.0')]
+    for path in ('/facts', '/compare', '/map', '/data'):
+        urls.append((f"{base}{path}", '0.7'))
+    try:
+        for m in Municipality.query.order_by(Municipality.name).all():
+            urls.append((f"{base}/town/{quote(m.name)}", '0.6'))
+    except Exception as e:
+        app.logger.error(f"sitemap generation error: {e}")
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>',
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for loc, prio in urls:
+        xml.append(f'  <url><loc>{loc}</loc><priority>{prio}</priority></url>')
+    xml.append('</urlset>')
+    return '\n'.join(xml), 200, {'Content-Type': 'application/xml'}
+
+
 # ============================================================
 # ROUTES
 # ============================================================
